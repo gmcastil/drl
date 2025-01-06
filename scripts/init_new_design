@@ -1,21 +1,48 @@
 #!/bin/bash
 
-if [[ -z "${1}" ]]; then
+function err () {
+    local msg
+    msg="${1}"
+    printf 'Error: %s\n' "${msg}" >&2
+}
+
+function usage () {
     printf 'Usage: %s\n' "${0} <drl_name>"
+    return 0
+}
+
+command -v git >/dev/null 2>&1 || \
+    { err "No git binary found in PATH"; exit 1; }
+
+if [[ -z "${1}" ]]; then
+    usage
     exit 1
 fi
-
 drl_name="${1}"
 
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    printf 'Error: Not inside a Git repository\n' >&2
+    err "Not inside a Git repository"
     exit 1
 fi
 
-drl_root="$(git rev-parse --show-toplevel)"
-
-if [[ -d "${drl_root}/${drl_name}" ]]; then
-    printf 'Error: DRL member already exists with that name\n' >&2
+repo_root="$(git rev-parse --show-toplevel)"
+drl_root="${repo_root}/${drl_name}"
+if [[ -w "${drl_root}" ]]; then
+    err "DRL entry already exists with that name"
     exit 1
 fi
+
+# Create a directory in the DRL root directory for the new entry
+if ! mkdir "${drl_root}"; then
+    err "Could not create DRL entry"
+    exit 1
+fi
+
+# Now create the appropriate sub-directories
+mkdir -p "${drl_root}/src/{rtl,packages}" || \
+    { err "Could not create DRL directory structure"; exit 1; }
+
+mkdir "${drl_root}/ip"
+mkdir "${drl_root}/doc"
+touch "${drl_root}/Makefile"
 
