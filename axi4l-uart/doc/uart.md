@@ -30,3 +30,43 @@ Bits 31 to 16 for RX status
 - I think it might be time to build a verification enviornment for the UART as
   we start adding software complexity
 
+# Verification
+Getting started on a verification suite for the UART core
+
+Testbench Top
+
+    Instantiates the DUT and all testbench components.
+    Connects the DUT to the testbench via interfaces.
+
+Environment
+
+    The top-level container for all verification components (e.g., driver, monitor, scoreboard).
+
+Interface
+
+    Encapsulates the DUT's signals to enable modular and clean communication between the testbench and DUT.
+
+Driver
+
+    Generates stimulus for the DUT (e.g., register writes, data input).
+
+Monitor
+
+    Observes DUT outputs and extracts transactions for comparison.
+
+Scoreboard
+
+    Compares actual DUT behavior (observed by the monitor) with expected behavior.
+
+Sequencer
+
+    Supplies transaction sequences to the driver.
+
+
+## Top Level Development
+The top level verification module needs to contain:
+- An AXI4-Lite interface of hte appropriate size
+- Clocks and reset
+- The DUT instance
+
+
