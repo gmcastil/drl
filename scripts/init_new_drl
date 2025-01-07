@@ -39,7 +39,7 @@ if ! mkdir "${drl_root}"; then
 fi
 
 # Now create the appropriate sub-directories
-mkdir -p "${drl_root}/src/{rtl,packages}" || \
+mkdir -p "${drl_root}/src/"{rtl,packages} || \
     { err "Could not create DRL directory structure"; exit 1; }
 
 mkdir "${drl_root}/ip"
