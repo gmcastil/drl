@@ -17,7 +17,8 @@ WORK			= work
 sim:
 	if [ -d $(WORK) ]; then $(VDEL) -all $(WORK); fi
 	$(VLIB) $(WORK)
-	$(VLOG) $(IF_DIR)/axi4l_if.sv
+	$(VLOG) -work $(WORK) -sv $(PKG_DIR)/axi4l_pkg.sv
+	$(VLOG) -work $(WORK) -sv $(IF_DIR)/axi4l_if.sv
 
 .PHONY: ctags
 ctags:
