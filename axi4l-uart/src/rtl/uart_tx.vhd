@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 entity uart_tx is
     generic (
         DEVICE              : string            := "7SERIES"
-    )
+    );
     port (
         clk             : in    std_logic;
         rst             : in    std_logic;

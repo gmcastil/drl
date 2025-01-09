@@ -1,6 +1,6 @@
 interface axi4l_if #(
-    parameter int   ADDR_WIDTH = 32,
-    parameter int   DATA_WIDTH = 32
+    parameter int   ADDR_WIDTH,
+    parameter int   DATA_WIDTH
 ) (
     input   logic   aclk,
     input   logic   aresetn
@@ -57,7 +57,7 @@ interface axi4l_if #(
         clocking cb_slave
     );
 
-    // Perform and AXI4-Lite read transaction
+    // Perform an AXI4-Lite read transaction
     task read(input logic [ADDR_WIDTH-1:0] rd_addr, output logic [DATA_WIDTH-1:0] rd_data, output axi4l_resp_t rd_resp);
 
         event raddr_done;
@@ -85,7 +85,7 @@ interface axi4l_if #(
 
                 // Assert that we are ready for data and block until valid and ready are true
                 rready = 1'b1;
-                @(cb._master.rvalid);
+                @(cb_master.rvalid);
                 rd_data = rdata;
                 rd_resp = axi4l_resp_t'(rresp);
                 rready = 1'b0;

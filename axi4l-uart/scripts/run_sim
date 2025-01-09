@@ -1,0 +1,3 @@
+#!/bin/bash
+vsim -c -voptargs=+acc -do 'log -r \*; run -all; exit' work.top
+
