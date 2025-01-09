@@ -38,11 +38,6 @@ sim:
 	$(VLOG) -work $(WORK) -sv $(DRL_DIR)/interfaces/axi4l_if.sv
 	$(VLOG) -work $(WORK) -sv -f $(TB_FILES)
 
-.PHONY: ip
-ip:
-	source $(VIVADO_ROOT_DIR)/settings64.sh; \
-		vivado -mode tcl -source $(DRL_DIR)/scripts/build_ip.tcl
-
 .PHONY: ctags
 ctags:
 	$(CTAGS) $(CTAGS_FLAGS) .

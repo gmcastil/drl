@@ -22,8 +22,8 @@ set build_ip_names {"uart_ctrl_ila" "uart_axi4l_ila"}
 
 foreach ip_name "${build_ip_names}" {
     set ip_build_file "${ip_name}.tcl"
-    if {[file exists "./ip/${ip_build_file}"]} {
-        source "./ip/${ip_build_file}"
+    if {[file exists "${ip_build_file}"]} {
+        source "${ip_build_file}"
     } else {
         puts "Could not find build script for ${ip_name}"
     }

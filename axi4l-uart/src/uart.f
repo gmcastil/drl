@@ -1,7 +1,8 @@
-./src/packages/uart_pkg.vhd
+# IP stub files
+./ip/output_products/uart_ctrl_ila/sim/uart_ctrl_ila.vhd
+./ip/output_products/uart_axi4l_ila/sim/uart_axi4l_ila.vhd
 
-./src/ip/uart_ctrl_ila_stub.vhdl
-./src/ip/uart_axi4l_ila_stub.vhdl
+./src/packages/uart_pkg.vhd
 
 ./src/rtl/baud_rate_gen.vhd
 
