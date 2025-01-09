@@ -16,33 +16,35 @@ set ila_config { \
         CONFIG.ALL_PROBE_SAME_MU    {true} \
         CONFIG.C_DATA_DEPTH         {1024} \
         CONFIG.C_INPUT_PIPE_STAGES  {1} \
-        CONFIG.C_NUM_OF_PROBES      {26} \
+        CONFIG.C_NUM_OF_PROBES      {28} \
         CONFIG.C_PROBE0_WIDTH       {1} \
         CONFIG.C_PROBE1_WIDTH       {1} \
         CONFIG.C_PROBE2_WIDTH       {1} \
         CONFIG.C_PROBE3_WIDTH       {32} \
-        CONFIG.C_PROBE4_WIDTH       {1} \
+        CONFIG.C_PROBE4_WIDTH       {3} \
         CONFIG.C_PROBE5_WIDTH       {1} \
-        CONFIG.C_PROBE6_WIDTH       {32} \
-        CONFIG.C_PROBE7_WIDTH       {4} \
-        CONFIG.C_PROBE8_WIDTH       {1} \
+        CONFIG.C_PROBE6_WIDTH       {1} \
+        CONFIG.C_PROBE7_WIDTH       {32} \
+        CONFIG.C_PROBE8_WIDTH       {4} \
         CONFIG.C_PROBE9_WIDTH       {1} \
-        CONFIG.C_PROBE10_WIDTH      {2} \
-        CONFIG.C_PROBE11_WIDTH      {1} \
+        CONFIG.C_PROBE10_WIDTH      {1} \
+        CONFIG.C_PROBE11_WIDTH      {2} \
         CONFIG.C_PROBE12_WIDTH      {1} \
-        CONFIG.C_PROBE13_WIDTH      {32} \
-        CONFIG.C_PROBE14_WIDTH      {1} \
-        CONFIG.C_PROBE15_WIDTH      {1} \
-        CONFIG.C_PROBE16_WIDTH      {32} \
-        CONFIG.C_PROBE17_WIDTH      {2} \
-        CONFIG.C_PROBE18_WIDTH      {4} \
-        CONFIG.C_PROBE19_WIDTH      {32} \
-        CONFIG.C_PROBE20_WIDTH      {1} \
-        CONFIG.C_PROBE21_WIDTH      {4} \
-        CONFIG.C_PROBE22_WIDTH      {32} \
-        CONFIG.C_PROBE23_WIDTH      {1} \
-        CONFIG.C_PROBE24_WIDTH      {1} \
+        CONFIG.C_PROBE13_WIDTH      {1} \
+        CONFIG.C_PROBE14_WIDTH      {32} \
+        CONFIG.C_PROBE15_WIDTH      {3} \
+        CONFIG.C_PROBE16_WIDTH      {1} \
+        CONFIG.C_PROBE17_WIDTH      {1} \
+        CONFIG.C_PROBE18_WIDTH      {32} \
+        CONFIG.C_PROBE19_WIDTH      {2} \
+        CONFIG.C_PROBE20_WIDTH      {4} \
+        CONFIG.C_PROBE21_WIDTH      {32} \
+        CONFIG.C_PROBE22_WIDTH      {1} \
+        CONFIG.C_PROBE23_WIDTH      {4} \
+        CONFIG.C_PROBE24_WIDTH      {32} \
         CONFIG.C_PROBE25_WIDTH      {1} \
+        CONFIG.C_PROBE26_WIDTH      {1} \
+        CONFIG.C_PROBE27_WIDTH      {1} \
     }
 
 # Create an in-memory project for the target part

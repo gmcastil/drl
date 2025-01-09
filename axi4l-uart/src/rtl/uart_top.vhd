@@ -28,6 +28,7 @@ entity uart_top is
         axi4l_awvalid       : in    std_logic;
         axi4l_awready       : out   std_logic;
         axi4l_awaddr        : in    std_logic_vector(31 downto 0);
+        axi4l_awprot        : in    std_logic_vector(2 downto 0);
 
         axi4l_wvalid        : in    std_logic;
         axi4l_wready        : out   std_logic;
@@ -41,6 +42,7 @@ entity uart_top is
         axi4l_arvalid       : in    std_logic;
         axi4l_arready       : out   std_logic;
         axi4l_araddr        : in    std_logic_vector(31 downto 0);
+        axi4l_arprot        : in    std_logic_vector(2 downto 0);
 
         axi4l_rvalid        : out   std_logic;
         axi4l_rready        : in    std_logic;
@@ -194,28 +196,30 @@ begin
             probe1(0)           => axi4l_awvalid,
             probe2(0)           => axi4l_awready,
             probe3              => axi4l_awaddr,
-            probe4(0)           => axi4l_wvalid,
-            probe5(0)           => axi4l_wready,
-            probe6              => axi4l_wdata,
-            probe7              => axi4l_wstrb,
-            probe8(0)           => axi4l_bvalid,
-            probe9(0)           => axi4l_bready,
-            probe10             => axi4l_bresp,
-            probe11(0)          => axi4l_arvalid,
-            probe12(0)          => axi4l_arready,
-            probe13             => axi4l_araddr,
-            probe14(0)          => axi4l_rvalid,
-            probe15(0)          => axi4l_rready,
-            probe16             => axi4l_rdata,
-            probe17             => axi4l_rresp,
-            probe18             => std_logic_vector(reg_addr),
-            probe19             => reg_wdata,
-            probe20(0)          => reg_wren,
-            probe21             => reg_be,
-            probe22             => reg_rdata,
-            probe23(0)          => reg_req,
-            probe24(0)          => reg_ack,
-            probe25(0)          => reg_err
+            probe4              => axi4l_awprot,
+            probe5(0)           => axi4l_wvalid,
+            probe6(0)           => axi4l_wready,
+            probe7              => axi4l_wdata,
+            probe8              => axi4l_wstrb,
+            probe9(0)           => axi4l_bvalid,
+            probe10(0)          => axi4l_bready,
+            probe11             => axi4l_bresp,
+            probe12(0)          => axi4l_arvalid,
+            probe13(0)          => axi4l_arready,
+            probe14             => axi4l_araddr,
+            probe15             => axi4l_arprot,
+            probe16(0)          => axi4l_rvalid,
+            probe17(0)          => axi4l_rready,
+            probe18             => axi4l_rdata,
+            probe19             => axi4l_rresp,
+            probe20             => std_logic_vector(reg_addr),
+            probe21             => reg_wdata,
+            probe22(0)          => reg_wren,
+            probe23             => reg_be,
+            probe24             => reg_rdata,
+            probe25(0)          => reg_req,
+            probe26(0)          => reg_ack,
+            probe27(0)          => reg_err
         );
     end generate g_axi_dbg;
 

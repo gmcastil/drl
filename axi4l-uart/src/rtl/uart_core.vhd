@@ -83,13 +83,13 @@ begin
     -- UART RX
 
     -- UART TX
-    uart_tx_i0: entity work.uart_tx
-    port map (
-        clk             => clk,
-        rst             => rst,
-        tx_data         => tx_data,
-        tx_data_valid   => tx_data_valid,
-        tx_data_ready   => tx_data_ready
-     );
+    -- uart_tx_i0: entity work.uart_tx
+    -- port map (
+    --     clk             => clk,
+    --     rst             => rst,
+    --     tx_data         => tx_data,
+    --     tx_data_valid   => tx_data_valid,
+    --     tx_data_ready   => tx_data_ready
+    --  );
 
 end architecture structural;
