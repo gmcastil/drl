@@ -13,7 +13,7 @@ VCOM_FLAGS		= -2008 -lint
 
 DRL_DIR			:= ..
 
-RUN_DIR			:= ./rundir
+RUN_DIR			:= $(shell readlink -f ./rundir)
 TB_DIR			:= ./sim
 SRC_DIR			:= ./src
 RTL_DIR			:= $(SRC_DIR)/rtl
@@ -22,12 +22,16 @@ PKG_DIR			:= $(SRC_DIR)/packages
 DUT_FILES		:= $(SRC_DIR)/uart.f
 TB_FILES		:= $(TB_DIR)/tb.f
 
+# Name of the work directory defined by the mapping made in the
+# modelsim.ini file (not the location of the library)
 WORK			:= work
 
 .PHONY: sim
 sim:
 	mkdir -pv $(RUN_DIR)
-	if [ -d $(RUN_DIR)/$(WORK) ]; then $(VLIB) -lib $(RUN_DIR)/$(WORK) -all; fi
+	if [[ -d $(RUN_DIR)/$(WORK) ]]; then $(VDEL) -lib $(RUN_DIR)/$(WORK) -all; fi
+	$(VLIB) $(RUN_DIR)/$(WORK)
+	$(VMAP) $(WORK) $(RUN_DIR)/$(WORK)
 
 	$(VCOM) -work $(WORK) $(VCOM_FLAGS) $(DRL_DIR)/macros/fifo_sync.vhd
 	$(VCOM) -work $(WORK) $(VCOM_FLAGS) $(DRL_DIR)/skid-buffer/src/rtl/skid_buffer.vhd
