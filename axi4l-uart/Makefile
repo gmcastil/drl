@@ -1,3 +1,6 @@
+# Tool versions, path to the tools, and location of Xilinx simulation libraries
+# are set and exported here
+include ../tools.conf
 include ../common.mk
 
 # Directories to exclude when creating a tags file. This prevents creating tags
@@ -45,4 +48,9 @@ ctags:
 .PHONY: clean
 clean:
 	rm -f tags
+
+.PHONY: test
+test:
+	@echo MODELSIM = $(MODELSIM)
+	@echo XILINX_SIMLIB_DIR = $(XILINX_SIMLIB_DIR)
 

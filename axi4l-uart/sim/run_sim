@@ -1,0 +1,4 @@
+#!/bin/bash
+
+MODELSIM="$(readlink -f ./modelsim.ini)"
+
