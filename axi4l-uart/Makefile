@@ -22,13 +22,12 @@ PKG_DIR			:= $(SRC_DIR)/packages
 DUT_FILES		:= $(SRC_DIR)/uart.f
 TB_FILES		:= $(TB_DIR)/tb.f
 
-WORK			:= $(RUN_DIR)/work
+WORK			:= work
 
 .PHONY: sim
 sim:
 	mkdir -pv $(RUN_DIR)
-	if [ -d $(WORK) ]; then $(VDEL) -all $(WORK); fi
-	$(VLIB) $(WORK)
+	if [ -d $(RUN_DIR)/$(WORK) ]; then $(VLIB) -lib $(RUN_DIR)/$(WORK) -all; fi
 
 	$(VCOM) -work $(WORK) $(VCOM_FLAGS) $(DRL_DIR)/macros/fifo_sync.vhd
 	$(VCOM) -work $(WORK) $(VCOM_FLAGS) $(DRL_DIR)/skid-buffer/src/rtl/skid_buffer.vhd
