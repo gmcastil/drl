@@ -38,12 +38,12 @@ interface axi4l_if #(
     logic                       rready;
 
     clocking cb_master @(posedge aclk);
-        output awaddr, wdata, araddr, awvalid, wvalid, awprot, arvalid, rready, arprot, bready;
+        output awaddr, wdata, wstrb, araddr, awvalid, wvalid, awprot, arvalid, rready, arprot, bready;
         input awready, wready, arready, rvalid, bvalid, rdata, rresp, bresp;
     endclocking
 
     clocking cb_slave @(posedge aclk);
-        input awaddr, wdata, araddr, awvalid, wvalid, awprot, arvalid, rready, arprot, bready;
+        input awaddr, wdata, wstrb, araddr, awvalid, wvalid, awprot, arvalid, rready, arprot, bready;
         output awready, wready, arready, rvalid, bvalid, rdata, rresp, bresp;
     endclocking
 

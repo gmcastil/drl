@@ -67,34 +67,22 @@ module top;
     // }}}
     
     // DUT instance -- {{{
-    uart_top #(
-        .DEVICE             ("7SERIES")
+    uart_wrapper #(
+        .DEVICE             (),
+        .BASE_OFFSET        (),
+        .BASE_OFFSET_MASK   (),
+        .RX_ENABLE          (),
+        .TX_ENABLE          (),
+        .DEBUG_UART_AXI     (),
+        .DEBUG_UART_CTRL    ()
     )
-    uart_top_i0 (
-        .clk                (clk), 
-        .rst                (rst),
-        .axi4l_awaddr       (uart_if.awaddr),
-        .axi4l_awvalid      (uart_if.awvalid),
-        .axi4l_awready      (uart_if.awready),
-        .axi4l_awprot       (uart_if.awprot),
-        .axi4l_wdata        (uart_if.wdata),
-        .axi4l_wstrb        (uart_if.wstrb),
-        .axi4l_wvalid       (uart_if.wvalid),
-        .axi4l_wready       (uart_if.wready),
-        .axi4l_bresp        (uart_if.bresp),
-        .axi4l_bvalid       (uart_if.bvalid),
-        .axi4l_bready       (uart_if.bready),
-        .axi4l_araddr       (uart_if.araddr),
-        .axi4l_arvalid      (uart_if.arvalid),
-        .axi4l_arready      (uart_if.arready),
-        .axi4l_arprot       (uart_if.arprot),
-        .axi4l_rdata        (uart_if.rdata),
-        .axi4l_rresp        (uart_if.rresp),
-        .axi4l_rvalid       (uart_if.rvalid),
-        .axi4l_rready       (uart_if.rready),
-        .irq                (irq), 
-        .rxd                (rxd),
-        .txd                (txd)
+    uart_wrapper_i0 (
+        .aclk           (clk),
+        .aresetn        (rstn),
+        .intf           (uart_if.SLAVE),
+        .irq            (irq),
+        .rxd            (rxd),
+        .txd            (txd)
     );
     // }}}
 
@@ -120,7 +108,7 @@ module top;
     initial begin
         tb = new(uart_if.MASTER);
         tb.run;
-        tb.my_read;
+        /* tb.my_read; */
         $stop;
     end
     // }}}
