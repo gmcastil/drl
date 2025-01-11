@@ -40,7 +40,7 @@ sim:
 	$(VCOM) -work $(WORK) $(VCOM_FLAGS) $(DRL_DIR)/axi4l-regs/src/rtl/reg_block.vhd
 	$(VCOM) -work $(WORK) $(VCOM_FLAGS) -f $(DUT_FILES)
 
-	$(VLOG) -work $(WORK) -sv $(DRL_DIR)/packages/axi4l_pkg.sv
+	$(VLOG) -work $(WORK) -sv $(DRL_DIR)/packages/axi4l/axi4l_pkg.sv
 	$(VLOG) -work $(WORK) -sv $(DRL_DIR)/interfaces/axi4l_if.sv
 	$(VLOG) -work $(WORK) -sv -f $(TB_FILES)
 

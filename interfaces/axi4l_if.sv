@@ -137,8 +137,8 @@ interface axi4l_if #(
         // Response phase
         bready = 1'b1;
         @(cb_slave.bvalid);
+        wr_resp = axi4l_resp_t'(cb_slave.bresp);
         bready = 1'b0;
-        wr_resp = axi4l_resp_t'(bresp);
         return;
 
     endtask: write
