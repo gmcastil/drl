@@ -58,7 +58,7 @@ interface axi4l_if #(
     );
 
     // Perform an AXI4-Lite read transaction
-    task read(input logic [ADDR_WIDTH-1:0] rd_addr, output logic [DATA_WIDTH-1:0] rd_data, output axi4l_resp_t rd_resp);
+    task automatic read(input logic [ADDR_WIDTH-1:0] rd_addr, output logic [DATA_WIDTH-1:0] rd_data, output axi4l_resp_t rd_resp);
 
         event raddr_done;
 
@@ -75,18 +75,22 @@ interface axi4l_if #(
                 // Assert that we have a valid address and block until ready and valid are true
                 araddr = rd_addr;
                 arvalid = 1'b1;
-                @(cb_master.arready);
+                @(cb_slave.arready);
+                // Invalidate the address and zero it out (could also put some noise on it here)
                 arvalid = 1'b0;
+                araddr = 'X;
                 ->raddr_done;
             end
+
+            // Read data accepted phase
             begin
                 // Once the event has fired, we can capture the data
                 @raddr_done;
 
                 // Assert that we are ready for data and block until valid and ready are true
                 rready = 1'b1;
-                @(cb_master.rvalid);
-                rd_data = rdata;
+                @(cb_slave.rvalid);
+                rd_data = cb_slave.rdata;
                 rd_resp = axi4l_resp_t'(rresp);
                 rready = 1'b0;
             end
@@ -94,7 +98,50 @@ interface axi4l_if #(
         join
         return;
 
-    endtask
+    endtask: read
+
+    task automatic write(input logic [ADDR_WIDTH-1:0] wr_addr, input logic [DATA_WIDTH-1:0] wr_data,
+                            input logic [(DATA_WIDTH/8)-1:0] wr_be, output axi4l_resp_t wr_resp);
+
+        bit wdata_done = 1'b0;
+        bit awaddr_done = 1'b0;
+
+        fork
+            // Write address accepted phase
+            begin
+                awaddr = wr_addr;
+                awvalid = 1'b1;
+                @(cb_slave.awready);
+                // Invalidate the address and zero it out (could also put some noise on it here)
+                awvalid = 1'b0;
+                awaddr = 'X;
+                awaddr_done = 1'b1;
+            end
+            // Write data accepted phase
+            begin
+                wdata = wr_data;
+                wstrb = wr_be;
+                wvalid = 1'b1;
+                @(cb_slave.wready);
+                // Invalidate the data bus 
+                wvalid = 1'b0;
+                wdata = 'X;
+                wstrb = 'X;
+                wdata_done = 1'b1;
+            end
+        join
+
+        // Wait for both phases to complete
+        wait(awaddr_done && wdata_done);
+
+        // Response phase
+        bready = 1'b1;
+        @(cb_slave.bvalid);
+        bready = 1'b0;
+        wr_resp = axi4l_resp_t'(bresp);
+        return;
+
+    endtask: write
 
 endinterface: axi4l_if
 

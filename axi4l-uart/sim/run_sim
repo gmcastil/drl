@@ -13,5 +13,12 @@ source "../../tools.conf" >/dev/null 2>&1 || \
 MODELSIM="$(readlink -f ./modelsim.ini)"
 export MODELSIM
 
-vsim -c -voptargs=+acc -do 'log -r \*; run -all; exit' -Ldir ../rundir work.top
+vsim \
+    -voptargs=+acc \
+    -GDEVICE="7SERIES" \
+    -GBASE_OFFSET=32\'h80000000 \
+    -GBASE_OFFSET_MASK=32\'h00000FFF \
+    -GRX_ENABLE='true' \
+    -GTX_ENABLE='true' \
+    -do 'log -r \*; run -all; exit' -Ldir ../rundir work.top
 

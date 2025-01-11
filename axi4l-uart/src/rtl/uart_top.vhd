@@ -21,7 +21,9 @@ entity uart_top is
         DEBUG_UART_CTRL     : boolean               := false
     );
     port (
+        -- Common clock for AXI interface and all UART logic and serial communiation
         clk                 : in    std_logic;
+        -- Power on reset to entire module
         rst                 : in    std_logic;
 
         -- AXI4-Lite register interface
@@ -61,6 +63,8 @@ end entity uart_top;
 
 architecture structural of uart_top is
 
+    signal rstn                 : std_logic;
+
     signal reg_addr             : unsigned(REG_ADDR_WIDTH-1 downto 0);
     signal reg_wdata            : std_logic_vector(31 downto 0);
     signal reg_wren             : std_logic;
@@ -91,6 +95,11 @@ architecture structural of uart_top is
     signal tx_data_ready        : std_logic;
 
 begin
+
+    -- The reset scheme still needs to be thought out, since there will undoubtedly be
+    -- a software mechanism to reset portions of the design. For now, just invert the reset so that
+    -- the AXI bus isn't held in reset the entire time
+    rstn    <= not rst;
 
     uart_core_i0: entity work.uart_core
     generic map (
@@ -159,7 +168,7 @@ begin
     )
     port map (
         clk                 => clk,
-        rstn                => not rst,
+        rstn                => rstn,
         s_axi_awaddr        => axi4l_awaddr,
         s_axi_awvalid       => axi4l_awvalid,
         s_axi_awready       => axi4l_awready,

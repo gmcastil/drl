@@ -2,13 +2,13 @@ module uart_wrapper #(
     parameter string        DEVICE              = "7SERIES",
     parameter bit [31:0]    BASE_OFFSET         = 32'h00000000,
     parameter bit [31:0]    BASE_OFFSET_MASK    = 32'h00000000,
-    parameter bit           RX_ENABLE           = 1'b1,
-    parameter bit           TX_ENABLE           = 1'b1,
-    parameter bit           DEBUG_UART_AXI      = 1'b0,
-    parameter bit           DEBUG_UART_CTRL     = 1'b0
+    parameter int           RX_ENABLE           = 1,
+    parameter int           TX_ENABLE           = 1,
+    parameter int           DEBUG_UART_AXI      = 0,
+    parameter int           DEBUG_UART_CTRL     = 0
 ) (
-    input       wire        aclk,
-    input       wire        aresetn,
+    input       wire        clk,
+    input       wire        rst,
     axi4l_if.SLAVE          intf,
     output      wire        irq,
     input       wire        rxd,
@@ -25,8 +25,8 @@ module uart_wrapper #(
         .DEBUG_UART_CTRL    (DEBUG_UART_CTRL)
     )
     uart_top_i0 (
-        .clk                (aclk), 
-        .rst                (aresetn),
+        .clk                (clk), 
+        .rst                (rst),
         .axi4l_awaddr       (intf.cb_slave.awaddr),
         .axi4l_awvalid      (intf.cb_slave.awvalid),
         .axi4l_awready      (intf.cb_slave.awready),
