@@ -8,5 +8,10 @@ package axi4l_pkg;
         RESP_DECERR     = 2'b11     // Decode error
     } axi4l_resp_t;
 
+    typedef enum {READ, WRITE, WRITE8, WRITE16, WRITE32, WRITE64} axi4l_txn_t;
+
+`include "axi4l_transaction.sv"
+`include "axi4l_driver.sv"
+
 endpackage: axi4l_pkg
 

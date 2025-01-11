@@ -13,7 +13,7 @@ source "../../tools.conf" >/dev/null 2>&1 || \
 MODELSIM="$(readlink -f ./modelsim.ini)"
 export MODELSIM
 
-vsim \
+vsim -c \
     -voptargs=+acc \
     -GDEVICE="7SERIES" \
     -GBASE_OFFSET=32\'h80000000 \
