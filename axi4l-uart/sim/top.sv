@@ -89,7 +89,6 @@ module top #(
         @(rst_done);
 
         test = new(uart_if);
-        /* test = new(); */
         test.run();
 
         $stop;
