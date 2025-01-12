@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-import axi4l_pkg::*;
+import uart_tb_pkg::*;
 
 module top #(
     parameter string        DEVICE,
@@ -40,8 +40,7 @@ module top #(
     // }}}
 
     // Class instances -- {{{
-    axi4l_transaction #(UART_AXI_ADDR_WIDTH, UART_AXI_DATA_WIDTH) txn;
-    axi4l_driver #(UART_AXI_ADDR_WIDTH, UART_AXI_DATA_WIDTH) driver;
+    uart_test #(UART_AXI_ADDR_WIDTH, UART_AXI_DATA_WIDTH) test;
     // }}}
 
     // DUT instance -- {{{
@@ -57,7 +56,7 @@ module top #(
     uart_wrapper_i0 (
         .clk            (clk),
         .rst            (rst),
-        .intf           (uart_if.SLAVE),
+        .intf           (uart_if),
         .irq            (irq),
         .rxd            (rxd),
         .txd            (txd)
@@ -87,35 +86,11 @@ module top #(
 
     // Simulation main body -- {{{
     initial begin
-        driver = new(uart_if.MASTER);
-        driver.display;
-
         @(rst_done);
 
-        txn = new(READ, 32'h8000003C);
-        driver.execute(txn);
-
-        for (int i = 0; i < 4; i++) begin
-            txn = new(WRITE8, 32'h8000003C, 32'hff, i);
-            driver.execute(txn);
-            txn.display;
-            txn = new(READ, 32'h8000003C);
-            driver.execute(txn);
-            txn.display;
-            txn = new(WRITE32, 32'h8000003C, 32'h0);
-            driver.execute(txn);
-        end
-
-        for (int i = 0; i < 4; i = i + 2) begin
-            txn = new(WRITE16, 32'h8000003C, 32'h1234, i);
-            driver.execute(txn);
-            txn.display;
-            txn = new(READ, 32'h8000003C);
-            driver.execute(txn);
-            txn.display;
-            txn = new(WRITE32, 32'h8000003C, 32'h0);
-            driver.execute(txn);
-        end
+        test = new(uart_if);
+        /* test = new(); */
+        test.run();
 
         $stop;
     end

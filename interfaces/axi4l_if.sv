@@ -44,18 +44,9 @@ interface axi4l_if #(
 
     clocking cb_slave @(posedge aclk);
         input awaddr, wdata, wstrb, araddr, awvalid, wvalid, awprot, arvalid, rready, arprot, bready;
-        output awready, wready, arready, rvalid, bvalid, rdata, rresp, bresp;
+        output awready, wready, arready, rvalid, bvalid; //, rdata, rresp, bresp;
+        inout rdata, rresp, bresp;
     endclocking
-
-    modport MASTER (
-        input aclk, aresetn,
-        clocking cb_master
-    );
-
-    modport SLAVE (
-        input aclk, aresetn,
-        clocking cb_slave
-    );
 
     // Perform an AXI4-Lite read transaction
     task automatic read(input logic [ADDR_WIDTH-1:0] rd_addr, output logic [DATA_WIDTH-1:0] rd_data, output axi4l_resp_t rd_resp);
@@ -91,7 +82,7 @@ interface axi4l_if #(
                 rready = 1'b1;
                 @(cb_slave.rvalid);
                 rd_data = cb_slave.rdata;
-                rd_resp = axi4l_resp_t'(rresp);
+                rd_resp = axi4l_resp_t'(cb_slave.rresp);
                 rready = 1'b0;
             end
         // Require that both of these tasks complete before rejoining the main thread
@@ -142,6 +133,11 @@ interface axi4l_if #(
         return;
 
     endtask: write
+
+    function void display;
+        $display("AXI_ADDR_WIDTH = %d", ADDR_WIDTH);
+        $display("AXI_DATA_WIDTH = %d", DATA_WIDTH);
+    endfunction: display
 
 endinterface: axi4l_if
 

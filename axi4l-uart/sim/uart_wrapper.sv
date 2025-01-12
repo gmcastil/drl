@@ -7,12 +7,12 @@ module uart_wrapper #(
     parameter int           DEBUG_UART_AXI      = 0,
     parameter int           DEBUG_UART_CTRL     = 0
 ) (
-    input       wire        clk,
-    input       wire        rst,
-    axi4l_if.SLAVE          intf,
-    output      wire        irq,
-    input       wire        rxd,
-    output      wire        txd
+    input       wire    clk,
+    input       wire    rst,
+    axi4l_if            intf,
+    output      wire    irq,
+    input       wire    rxd,
+    output      wire    txd
 );
 
     uart_top #(
