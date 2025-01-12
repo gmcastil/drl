@@ -69,8 +69,8 @@ module top #(
 
     // Interfaces -- {{{
     axi4l_if #(
-        .ADDR_WIDTH    (32),
-        .DATA_WIDTH    (32)
+        .ADDR_WIDTH    (UART_AXI_ADDR_WIDTH),
+        .DATA_WIDTH    (UART_AXI_DATA_WIDTH)
     )
     uart_if (
         .aclk           (clk),
@@ -130,6 +130,32 @@ module top #(
         driver.display;
 
         @(rst_done);
+
+        txn = new(READ, 32'h8000003C);
+        driver.execute(txn);
+
+        for (int i = 0; i < 4; i++) begin
+            txn = new(WRITE8, 32'h8000003C, 32'hff, i);
+            driver.execute(txn);
+            txn.display;
+            txn = new(READ, 32'h8000003C);
+            driver.execute(txn);
+            txn.display;
+            txn = new(WRITE32, 32'h8000003C, 32'h0);
+            driver.execute(txn);
+        end
+
+        for (int i = 0; i < 4; i = i + 2) begin
+            txn = new(WRITE16, 32'h8000003C, 32'h1234, i);
+            driver.execute(txn);
+            txn.display;
+            txn = new(READ, 32'h8000003C);
+            driver.execute(txn);
+            txn.display;
+            txn = new(WRITE32, 32'h8000003C, 32'h0);
+            driver.execute(txn);
+        end
+
         $stop;
     end
     // }}}
