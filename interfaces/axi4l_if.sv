@@ -44,19 +44,21 @@ interface axi4l_if #(
 
     clocking cb_slave @(posedge aclk);
         input awaddr, wdata, wstrb, araddr, awvalid, wvalid, awprot, arvalid, rready, arprot, bready;
-        output awready, wready, arready, rvalid, bvalid; //, rdata, rresp, bresp;
+        output awready, wready, arready, rvalid, bvalid;
+        // These are made inout so that they can be capture from the slave domain as outputs (recall
+        // that per LRM, outputs of clocking blocks have no scheduling semantics, but inouts do.
         inout rdata, rresp, bresp;
     endclocking
+
+    /*
+     * There are mixed blocking and non-blocking assignments in the read and write tasks for this
+     * interface which is quite intentional. 
+     */
 
     // Perform an AXI4-Lite read transaction
     task automatic read(input logic [ADDR_WIDTH-1:0] rd_addr, output logic [DATA_WIDTH-1:0] rd_data, output axi4l_resp_t rd_resp);
 
         event raddr_done;
-
-        if (aresetn == 1'b0) begin
-            $display("Read ignored while in reset");
-            return;
-        end
 
         // Background two processes, one to wait for the address phase to be complete and signal
         // to the other to wait for the data phase to be complete
@@ -64,12 +66,12 @@ interface axi4l_if #(
             // Read address accepted phase
             begin
                 // Assert that we have a valid address and block until ready and valid are true
-                araddr = rd_addr;
-                arvalid = 1'b1;
+                cb_master.araddr <= rd_addr;
+                cb_master.arvalid <= 1'b1;
                 @(cb_slave.arready);
                 // Invalidate the address and zero it out (could also put some noise on it here)
-                arvalid = 1'b0;
-                araddr = 'X;
+                cb_master.arvalid <= 1'b0;
+                cb_master.araddr <= 'X;
                 ->raddr_done;
             end
 
@@ -79,11 +81,11 @@ interface axi4l_if #(
                 @raddr_done;
 
                 // Assert that we are ready for data and block until valid and ready are true
-                rready = 1'b1;
+                cb_master.rready <= 1'b1;
                 @(cb_slave.rvalid);
+                cb_master.rready <= 1'b0;
                 rd_data = cb_slave.rdata;
                 rd_resp = axi4l_resp_t'(cb_slave.rresp);
-                rready = 1'b0;
             end
         // Require that both of these tasks complete before rejoining the main thread
         join
@@ -91,6 +93,7 @@ interface axi4l_if #(
 
     endtask: read
 
+    // Perform an AXI4-Lite write transaction
     task automatic write(input logic [ADDR_WIDTH-1:0] wr_addr, input logic [DATA_WIDTH-1:0] wr_data,
                             input logic [(DATA_WIDTH/8)-1:0] wr_be, output axi4l_resp_t wr_resp);
 
@@ -100,24 +103,26 @@ interface axi4l_if #(
         fork
             // Write address accepted phase
             begin
-                awaddr = wr_addr;
-                awvalid = 1'b1;
+                cb_master.awaddr <= wr_addr;
+                cb_master.awvalid <= 1'b1;
                 @(cb_slave.awready);
                 // Invalidate the address and zero it out (could also put some noise on it here)
-                awvalid = 1'b0;
-                awaddr = 'X;
+                cb_master.awvalid <= 1'b0;
+                cb_master.awaddr <= 'X;
+
                 awaddr_done = 1'b1;
             end
             // Write data accepted phase
             begin
-                wdata = wr_data;
-                wstrb = wr_be;
-                wvalid = 1'b1;
+                cb_master.wdata <= wr_data;
+                cb_master.wstrb <= wr_be;
+                cb_master.wvalid <= 1'b1;
                 @(cb_slave.wready);
                 // Invalidate the data bus 
-                wvalid = 1'b0;
-                wdata = 'X;
-                wstrb = 'X;
+                cb_master.wvalid <= 1'b0;
+                cb_master.wdata <= 'X;
+                cb_master.wstrb <= 'X;
+                
                 wdata_done = 1'b1;
             end
         join
@@ -126,10 +131,10 @@ interface axi4l_if #(
         wait(awaddr_done && wdata_done);
 
         // Response phase
-        bready = 1'b1;
+        cb_master.bready <= 1'b1;
         @(cb_slave.bvalid);
+        cb_master.bready <= 1'b0;
         wr_resp = axi4l_resp_t'(cb_slave.bresp);
-        bready = 1'b0;
         return;
 
     endtask: write
