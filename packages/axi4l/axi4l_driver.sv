@@ -3,25 +3,41 @@ class axi4l_driver #(
     parameter int   AXI_DATA_WIDTH
 );
 
+    mailbox #(axi4l_transaction#(AXI_ADDR_WIDTH, AXI_DATA_WIDTH)) txn_queue;
     virtual interface axi4l_if #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) vif;
 
-    function new(virtual axi4l_if #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) vif);
+    function new(virtual axi4l_if #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) vif,
+                    mailbox #(axi4l_transaction#(AXI_ADDR_WIDTH, AXI_DATA_WIDTH)) txn_queue);
+        if (vif == null) begin
+            $fatal(0, "Cannot initialize AXI4L driver - interface handle was NULL");
+        end
         this.vif = vif;
+        this.txn_queue = txn_queue;
+        if (this.txn_queue == null) begin
+            $fatal(0, "Could not create AXI4L driver mailbox");
+        end
     endfunction: new
 
-    task automatic execute(axi4l_transaction #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) txn);
+    task automatic execute();
 
         logic [7:0] byte_enable;
         logic [AXI_DATA_WIDTH-1:0] aligned_data;
+        axi4l_transaction #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) txn;
 
-        case (txn.kind)
-            READ:       begin this.vif.read(txn.addr, txn.data, txn.resp); end
-            WRITE8:     begin write8(txn.addr, txn.data[7:0], txn.position, txn.resp); end
-            WRITE16:    begin write16(txn.addr, txn.data[15:0], txn.position, txn.resp); end
-            WRITE32:    begin write32(txn.addr, txn.data[31:0], txn.position, txn.resp); end
-            WRITE64:    begin write64(txn.addr, txn.data[63:0], txn.resp); end
-            default:    begin $fatal("Unsupported operation type: %d", txn.kind); end
-        endcase
+        $display("[DRIVER] Started AXI4 Lite driver");
+        $fflush;
+        forever begin
+            this.txn_queue.get(txn);
+            case (txn.kind)
+                READ:       begin this.vif.read(txn.addr, txn.data, txn.resp); end
+                WRITE8:     begin write8(txn.addr, txn.data[7:0], txn.position, txn.resp); end
+                WRITE16:    begin write16(txn.addr, txn.data[15:0], txn.position, txn.resp); end
+                WRITE32:    begin write32(txn.addr, txn.data[31:0], txn.position, txn.resp); end
+                WRITE64:    begin write64(txn.addr, txn.data[63:0], txn.resp); end
+                default:    begin $fatal("Unsupported operation type: %d", txn.kind); end
+            endcase
+            txn.display();
+        end
 
     endtask: execute
 

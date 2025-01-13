@@ -89,9 +89,13 @@ module top #(
         @(rst_done);
 
         test = new(uart_if);
-        test.run();
+        fork 
+            test.run();
+        join_none
 
-        $stop;
+        wait(test.done);
+        #10us;
+        $finish;
     end
     // }}}
 
