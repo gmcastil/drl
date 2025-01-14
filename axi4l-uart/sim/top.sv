@@ -1,6 +1,7 @@
 `timescale 1ns / 1ps
 
 import uart_tb_pkg::*;
+import uart_tests_pkg::*;
 
 module top #(
     parameter string        DEVICE,
@@ -19,13 +20,18 @@ module top #(
     parameter RST_ASSERT_CNT = 10;
     // }}}
 
-    // Signals -- {{{
+    // Signals, variables, events-- {{{
     bit clk = 1'b0;
     bit rst = 1'b0;
     bit rstn = 1'b1;
     bit irq;
     bit rxd;
     bit txd;
+
+    event rst_done;
+
+    string test_name;
+
     // }}}
 
     // Interfaces -- {{{
@@ -40,7 +46,7 @@ module top #(
     // }}}
 
     // Class instances -- {{{
-    uart_test #(UART_AXI_ADDR_WIDTH, UART_AXI_DATA_WIDTH) test;
+    uart_base_test #(UART_AXI_ADDR_WIDTH, UART_AXI_DATA_WIDTH) test_case;
     // }}}
 
     // DUT instance -- {{{
@@ -71,8 +77,6 @@ module top #(
         end
     end
 
-    event rst_done;
-
     initial begin
         repeat (RST_ASSERT_CNT) @(posedge clk);
         rst = 1'b1;
@@ -88,13 +92,12 @@ module top #(
     initial begin
         @(rst_done);
 
-        test = new(uart_if);
+        test_case = new(uart_if);
         fork 
-            test.run();
+            test_case.run();
         join_none
 
-        wait(test.done);
-        #10us;
+        @(test_case.test_done);
         $finish;
     end
     // }}}
