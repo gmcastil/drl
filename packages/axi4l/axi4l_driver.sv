@@ -18,7 +18,8 @@ class axi4l_driver #(
         end
     endfunction: new
 
-    task automatic execute();
+    // Pull transactions from the mailbox and process them in the order they arrive
+    task automatic run();
 
         logic [7:0] byte_enable;
         logic [AXI_DATA_WIDTH-1:0] aligned_data;
@@ -39,7 +40,7 @@ class axi4l_driver #(
             txn.display();
         end
 
-    endtask: execute
+    endtask: run
 
     task automatic write8(logic [AXI_ADDR_WIDTH-1:0] addr, logic [7:0] data, int position, axi4l_resp_t resp);
         logic [AXI_DATA_WIDTH-1:0] aligned_data;
