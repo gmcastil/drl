@@ -20,7 +20,6 @@ RTL_DIR			:= $(SRC_DIR)/rtl
 PKG_DIR			:= $(SRC_DIR)/packages
 
 DUT_FILES		:= $(SRC_DIR)/uart.f
-TB_FILES		:= $(TB_DIR)/tb.f
 
 # Name of the work directory defined by the mapping made in the
 # modelsim.ini file (not the location of the library)
@@ -40,9 +39,12 @@ sim:
 	$(VCOM) -work $(WORK) $(VCOM_FLAGS) $(DRL_DIR)/axi4l-regs/src/rtl/reg_block.vhd
 	$(VCOM) -work $(WORK) $(VCOM_FLAGS) -f $(DUT_FILES)
 
-	$(VLOG) -work $(WORK) -sv $(DRL_DIR)/packages/axi4l/axi4l_pkg.sv
+	$(VLOG) -work $(WORK) +incdir+$(DRL_DIR)/packages/axi4l -sv $(DRL_DIR)/packages/axi4l/axi4l_pkg.sv
 	$(VLOG) -work $(WORK) -sv $(DRL_DIR)/interfaces/axi4l_if.sv
-	$(VLOG) -work $(WORK) -sv -f $(TB_FILES)
+	$(VLOG) -work $(WORK) +incdir+$(TB_DIR) -sv $(TB_DIR)/uart_tb_pkg.sv
+	$(VLOG) -work $(WORK) +incdir+$(TB_DIR)/tests -sv $(TB_DIR)/tests/uart_tests_pkg.sv
+	$(VLOG) -work $(WORK) -sv $(TB_DIR)/uart_wrapper.sv
+	$(VLOG) -work $(WORK) -sv $(TB_DIR)/top.sv
 
 .PHONY: ctags
 ctags:
