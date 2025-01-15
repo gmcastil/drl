@@ -46,7 +46,13 @@ module top #(
     // }}}
 
     // Class instances -- {{{
-    uart_base_test #(UART_AXI_ADDR_WIDTH, UART_AXI_DATA_WIDTH) test_case;
+    uart_test_base #(UART_AXI_ADDR_WIDTH,
+                        UART_AXI_DATA_WIDTH,
+                        DEVICE,
+                        BASE_OFFSET,
+                        BASE_OFFSET_MASK,
+                        RX_ENABLE,
+                        TX_ENABLE)  test_case;
     // }}}
 
     // DUT instance -- {{{

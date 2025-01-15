@@ -6,30 +6,36 @@ class uart_env #(
     // AXI4-lite command and control to DUT
     virtual interface axi4l_if #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) vif;
     axi4l_driver #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) driver;
+    uart_sequencer #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) sequencer;
+    uart_config cfg;
     
     // Shared mailbox betwen driver and sequencer
     mailbox #(axi4l_transaction#(AXI_ADDR_WIDTH, AXI_DATA_WIDTH)) txn_queue;
 
-    function new(virtual axi4l_if #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) vif);
+    function new(virtual axi4l_if #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) vif,
+                    uart_config cfg);
         if (vif == null) begin
             $fatal(0, "Cannot initialize UART environment");
         end
         this.vif = vif;
+        this.cfg = cfg;
         $display("[ENV] Environment instantiated with virtual interface");
         $display("[ENV]   ADDR_WIDTH = %0d", vif.ADDR_WIDTH);
         $display("[ENV]   DATA_WIDTH = %0d", vif.DATA_WIDTH);
         $fflush;
         this.txn_queue = new();
         this.driver = new(this.vif, this.txn_queue);
+        this.sequencer = new(this.txn_queue);
     endfunction: new
 
     task automatic run();
 
         axi4l_transaction #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) txn;
+
         // AXI4-Lite driver runs in the background
         fork
         begin
-            this.driver.execute();
+            this.driver.run();
         end
         join_none
 
