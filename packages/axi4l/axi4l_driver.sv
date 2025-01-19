@@ -1,10 +1,7 @@
-class axi4l_driver #(
-    parameter int   AXI_ADDR_WIDTH,
-    parameter int   AXI_DATA_WIDTH
-);
+class axi4l_driver;
 
     mailbox #(axi4l_transaction#(AXI_ADDR_WIDTH, AXI_DATA_WIDTH)) txn_queue;
-    virtual interface axi4l_if #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) vif;
+
 
     function new(virtual axi4l_if #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) vif,
                     mailbox #(axi4l_transaction#(AXI_ADDR_WIDTH, AXI_DATA_WIDTH)) txn_queue);

@@ -1,15 +1,16 @@
 `timescale 1ns / 1ps
 
-import uart_tb_pkg::*;
-import uart_tests_pkg::*;
-
 module top #(
     parameter string        DEVICE,
-    parameter bit [31:0]    BASE_OFFSET,
-    parameter bit [31:0]    BASE_OFFSET_MASK,
+    parameter bit [63:0]    BASE_OFFSET,
+    parameter bit [63:0]    BASE_OFFSET_MASK,
     parameter int           RX_ENABLE,
     parameter int           TX_ENABLE
 );
+
+    import uart_tb_pkg::*;
+    import uart_tests_pkg::*;
+    import axi4l_pkg::*;
 
     // Parameters -- {{{
     //
@@ -24,14 +25,19 @@ module top #(
     bit clk = 1'b0;
     bit rst = 1'b0;
     bit rstn = 1'b1;
+
+    // Remaining DUT signals that do not go in the interface
     bit irq;
     bit rxd;
     bit txd;
 
+    // Indicates that all external testbench clocks and resets are completed
     event rst_done;
 
     string test_name;
 
+    // Container for the DUT configuration
+    uart_config_t dut_cfg;
     // }}}
 
     // Interfaces -- {{{
@@ -46,13 +52,7 @@ module top #(
     // }}}
 
     // Class instances -- {{{
-    uart_test_base #(UART_AXI_ADDR_WIDTH,
-                        UART_AXI_DATA_WIDTH,
-                        DEVICE,
-                        BASE_OFFSET,
-                        BASE_OFFSET_MASK,
-                        RX_ENABLE,
-                        TX_ENABLE)  test_case;
+    uart_test_scratch #(UART_AXI_ADDR_WIDTH, UART_AXI_DATA_WIDTH) test_case;
     // }}}
 
     // DUT instance -- {{{
@@ -93,12 +93,30 @@ module top #(
         ->rst_done;
     end
     // }}}
-
+    
+    logic [31:0] data;
+    axi4l_resp_t resp;
     // Simulation main body -- {{{
     initial begin
+
+        // This lets us grab the extended BFM that is embedded in the interface which serves as
+        // a container
+        axi4l_bfm_base #(UART_AXI_ADDR_WIDTH, UART_AXI_DATA_WIDTH) axi4l_bfm;
+        axi4l_bfm = uart_if.bfm;
+
+        dut_cfg = '{
+            device: DEVICE,
+            rx_enable: bit'(RX_ENABLE),
+            tx_enable: bit'(TX_ENABLE),
+            axi_base_addr: BASE_OFFSET,
+            axi_base_mask: BASE_OFFSET_MASK,
+            axi_addr_width: UART_AXI_ADDR_WIDTH,
+            axi_data_width: UART_AXI_DATA_WIDTH
+        };
+
         @(rst_done);
 
-        test_case = new(uart_if);
+        test_case = new(axi4l_bfm, dut_cfg);
         fork 
             test_case.run();
         join_none

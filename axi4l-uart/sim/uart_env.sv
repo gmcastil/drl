@@ -1,18 +1,18 @@
 class uart_env #(
-    parameter int AXI_ADDR_WIDTH,
-    parameter int AXI_DATA_WIDTH
+    int unsigned AXI_ADDR_WIDTH,
+    int unsigned AXI_DATA_WIDTH
 );
 
     // AXI4-lite command and control to DUT
-    virtual interface axi4l_if #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) vif;
-    axi4l_driver #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) driver;
-    uart_sequencer #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) sequencer;
+    virtual interface axi4l_if vif;
+    axi4l_driver driver;
+    uart_sequencer sequencer;
     uart_config cfg;
     
     // Shared mailbox betwen driver and sequencer
     mailbox #(axi4l_transaction#(AXI_ADDR_WIDTH, AXI_DATA_WIDTH)) txn_queue;
 
-    function new(virtual axi4l_if #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) vif,
+    function new(virtual axi4l_if vif,
                     uart_config cfg);
         if (vif == null) begin
             $fatal(0, "Cannot initialize UART environment");
@@ -20,8 +20,8 @@ class uart_env #(
         this.vif = vif;
         this.cfg = cfg;
         $display("[ENV] Environment instantiated with virtual interface");
-        $display("[ENV]   ADDR_WIDTH = %0d", vif.ADDR_WIDTH);
-        $display("[ENV]   DATA_WIDTH = %0d", vif.DATA_WIDTH);
+        $display("[ENV]   ADDR_WIDTH = %0d", this.vif.ADDR_WIDTH);
+        $display("[ENV]   DATA_WIDTH = %0d", this.vif.DATA_WIDTH);
         $fflush;
         this.txn_queue = new();
         this.driver = new(this.vif, this.txn_queue);

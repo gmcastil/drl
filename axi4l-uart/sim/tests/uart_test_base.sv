@@ -1,48 +1,33 @@
-class uart_test_base #(
-    // Interface parameters not provided to the top level test bench or DUT
+virtual class uart_test_base #(
     parameter int AXI_ADDR_WIDTH,
-    parameter int AXI_DATA_WIDTH,
-    // Instantiation parameters to the DUT that are provided at compile time
-    parameter string        DEVICE,
-    parameter bit [31:0]    BASE_OFFSET,
-    parameter bit [31:0]    BASE_OFFSET_MASK,
-    parameter int           RX_ENABLE,
-    parameter int           TX_ENABLE
+    parameter int AXI_DATA_WIDTH
 );
+
     // All extended base tests send the same signal, but we overload the run method
     // since all tests will run differently.
     event test_done;
 
-    uart_env #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) env;
-    uart_config cfg;
+    /* uart_env env; */
+    uart_config uart_cfg;
+    axi4l_bfm_base #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) axi4l_bfm;
 
-    function new(virtual axi4l_if #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) vif);
-        if (vif == null) begin
-            $fatal(0, "Cannot initialize UART test");
-        end
+    function new(axi4l_bfm_base #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) axi4l_bfm, uart_config_t dut_cfg);
         $display("[TEST] Initializing test");
-
-        this.cfg = new();
-        this.cfg.device = DEVICE;
-        this.cfg.axi_base_addr = {32'h0, BASE_OFFSET};
-        this.cfg.axi_base_mask = {32'h0, BASE_OFFSET_MASK};
-        this.cfg.rx_enable = bit'(RX_ENABLE);
-        this.cfg.tx_enable = bit'(TX_ENABLE);
-
-        this.env = new(vif, this.cfg);
+        this.axi4l_bfm = axi4l_bfm;
+        this.uart_cfg = new(dut_cfg);
+        /* axi4l_bfm.read(32'h8000000C, data, resp); */
+        /* $display("data = %0x, resp = %s", data, resp.name()); */
     endfunction: new
 
-    task run();
-        $write("Counting to 10...");
-        for (int i = 0; i < 10; i++) begin
-            $write("%d ", i);
-            #100us;
-            $fflush;
-        end
-        $display("");
-        $display("[%0t] [TEST] Test completed...temporarily", $time);
-        ->test_done;
-    endtask: run
-
 endclass: uart_test_base
+
+
+    /* function new(axi4l_bfm_base #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) bfm, uart_config_t dut_cfg); */
+
+    /*     this.cfg = new(dut_cfg); */
+
+    /*     this.cfg.display(); */
+    /*     /1* bfm.display(); *1/ */
+    /*     /1* this.env = new(bfm, this.cfg); *1/ */
+    /* endfunction: new */
 

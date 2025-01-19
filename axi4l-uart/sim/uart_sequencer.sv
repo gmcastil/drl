@@ -1,15 +1,12 @@
-class uart_sequencer #(
-    parameter int AXI_ADDR_WIDTH,
-    parameter int AXI_DATA_WIDTH
-);
+class uart_sequencer;
 
-    mailbox #(axi4l_transaction#(AXI_ADDR_WIDTH, AXI_DATA_WIDTH)) txn_queue;
+    mailbox #(axi4l_transaction) txn_queue;
 
-    function new(mailbox #(axi4l_transaction#(AXI_ADDR_WIDTH, AXI_DATA_WIDTH)) txn_queue);
+    function new(mailbox #(axi4l_transaction) txn_queue);
         this.txn_queue = new();
     endfunction: new
 
-    task put_transaction(axi4l_transaction #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) txn);
+    task put_transaction(axi4l_transaction txn);
         this.txn_queue.put(txn);
         $display("[%0t] [SEQUENCER] Transaction added to the queue: addr=%0h, king=%s",
                     $time, txn.addr, txn.kind);

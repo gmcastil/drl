@@ -8,10 +8,22 @@ package axi4l_pkg;
         RESP_DECERR     = 2'b11     // Decode error
     } axi4l_resp_t;
 
-    typedef enum {READ, WRITE8, WRITE16, WRITE32, WRITE64} axi4l_txn_t;
+    virtual class axi4l_bfm_base #(
+        parameter int ADDR_WIDTH,
+        parameter int DATA_WIDTH
+    );
 
-`include "axi4l_transaction.sv"
-`include "axi4l_driver.sv"
+        /* function new(int addr_width, int data_width); */
+        /*     this.ADDR_WIDTH = addr_width; */
+        /*     this.DATA_WIDTH = data_width; */
+        /* endfunction: new */
+
+        pure virtual task automatic read(input logic [ADDR_WIDTH-1:0] rd_addr, output logic [DATA_WIDTH-1:0] rd_data, axi4l_resp_t rd_resp);
+        pure virtual task automatic write(input logic [ADDR_WIDTH-1:0] wr_addr, input logic [DATA_WIDTH-1:0] wr_data, input logic [(DATA_WIDTH/8)-1:0] wr_be, output axi4l_resp_t wr_resp);
+        pure virtual function void display();
+
+    endclass: axi4l_bfm_base
 
 endpackage: axi4l_pkg
+
 
