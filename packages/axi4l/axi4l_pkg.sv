@@ -8,6 +8,14 @@ package axi4l_pkg;
         RESP_DECERR     = 2'b11     // Decode error
     } axi4l_resp_t;
 
+    typedef enum {
+        READ,
+        WRITE8,
+        WRITE16,
+        WRITE32,
+        WRITE64
+    } axi4l_txn_t;
+
     virtual class axi4l_bfm_base #(
         parameter int ADDR_WIDTH,
         parameter int DATA_WIDTH
@@ -23,6 +31,9 @@ package axi4l_pkg;
         pure virtual function void display();
 
     endclass: axi4l_bfm_base
+
+`include "axi4l_transaction.sv"
+`include "axi4l_driver.sv"
 
 endpackage: axi4l_pkg
 

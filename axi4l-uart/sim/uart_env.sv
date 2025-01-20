@@ -6,17 +6,17 @@ class uart_env #(
     // AXI4-lite command and control to DUT
     uart_config cfg;
     axi4l_bfm_base #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) axi4l_bfm;
+    axi4l_driver #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) driver;
 
     // Shared mailbox betwen driver and sequencer
-    /* mailbox #(axi4l_transaction#(AXI_ADDR_WIDTH, AXI_DATA_WIDTH)) txn_queue; */
+    mailbox #(axi4l_transaction #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH)) txn_queue;
 
     function new(axi4l_bfm_base #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) axi4l_bfm,
                     uart_config cfg);
         this.axi4l_bfm = axi4l_bfm;
         this.cfg = cfg;
-        /* this.txn_queue = new(); */
-        /* this.driver = new(this.vif, this.txn_queue); */
-        /* this.sequencer = new(this.txn_queue); */
+        this.txn_queue = new();
+        this.driver = new(this.axi4l_bfm, this.txn_queue);
     endfunction: new
 
     /* task automatic run(); */

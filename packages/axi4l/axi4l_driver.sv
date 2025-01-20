@@ -1,14 +1,13 @@
-class axi4l_driver;
+class axi4l_driver #(
+    parameter int AXI_ADDR_WIDTH,
+    parameter int AXI_DATA_WIDTH
+);
 
     mailbox #(axi4l_transaction#(AXI_ADDR_WIDTH, AXI_DATA_WIDTH)) txn_queue;
+    axi4l_bfm_base #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) axi4l_bfm;
 
-
-    function new(virtual axi4l_if #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) vif,
+    function new(axi4l_bfm_base #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) axi4l_bfm,
                     mailbox #(axi4l_transaction#(AXI_ADDR_WIDTH, AXI_DATA_WIDTH)) txn_queue);
-        if (vif == null) begin
-            $fatal(0, "Cannot initialize AXI4L driver - interface handle was NULL");
-        end
-        this.vif = vif;
         this.txn_queue = txn_queue;
         if (this.txn_queue == null) begin
             $fatal(0, "Could not create AXI4L driver mailbox");
@@ -27,7 +26,7 @@ class axi4l_driver;
         forever begin
             this.txn_queue.get(txn);
             case (txn.kind)
-                READ:       begin this.vif.read(txn.addr, txn.data, txn.resp); end
+                READ:       begin this.axi4l_bfm.read(txn.addr, txn.data, txn.resp); end
                 WRITE8:     begin write8(txn.addr, txn.data[7:0], txn.position, txn.resp); end
                 WRITE16:    begin write16(txn.addr, txn.data[15:0], txn.position, txn.resp); end
                 WRITE32:    begin write32(txn.addr, txn.data[31:0], txn.position, txn.resp); end
@@ -49,7 +48,7 @@ class axi4l_driver;
         aligned_data = data << (position * 8);
         byte_enable = 1'b1 << position;
 
-        this.vif.write(addr, aligned_data, byte_enable, resp);
+        this.axi4l_bfm.write(addr, aligned_data, byte_enable, resp);
     endtask: write8
 
     task automatic write16(logic [AXI_ADDR_WIDTH-1:0] addr, logic [15:0] data, int position, axi4l_resp_t resp);
@@ -61,7 +60,7 @@ class axi4l_driver;
 
         aligned_data = data << (position * 8);
         byte_enable = 2'b11 << position;
-        this.vif.write(addr, aligned_data, byte_enable, resp);
+        this.axi4l_bfm.write(addr, aligned_data, byte_enable, resp);
     endtask: write16
 
     task automatic write32(logic [AXI_ADDR_WIDTH-1:0] addr, logic [31:0] data, int position, axi4l_resp_t resp);
@@ -73,7 +72,7 @@ class axi4l_driver;
 
         aligned_data = data << (position * 8);
         byte_enable = 4'b1111 << position;
-        this.vif.write(addr, aligned_data, byte_enable, resp);
+        this.axi4l_bfm.write(addr, aligned_data, byte_enable, resp);
     endtask: write32
 
     task automatic write64(logic [AXI_ADDR_WIDTH-1:0] addr, logic [63:0] data, axi4l_resp_t resp);
@@ -83,7 +82,7 @@ class axi4l_driver;
             else $fatal(0, "Data bus width unsupported");
 
         byte_enable = 8'hFF;
-        this.vif.write(addr, data, byte_enable, resp);
+        this.axi4l_bfm.write(addr, data, byte_enable, resp);
     endtask: write64
 
     function automatic void display;
