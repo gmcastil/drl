@@ -1,21 +1,21 @@
 class uart_config #();
 
     string device;
+    bit rx_enable;
+    bit tx_enable;
     int unsigned axi_base_addr;
     int unsigned axi_base_mask;
     int unsigned axi_addr_width;
     int unsigned axi_data_width;
-    bit rx_enable;
-    bit tx_enable;
 
-    function new(uart_config_t dut_config);
-        this.device = dut_config.device;
-        this.rx_enable = dut_config.rx_enable;
-        this.tx_enable = dut_config.tx_enable;
-        this.axi_base_addr = dut_config.axi_base_addr;
-        this.axi_base_mask = dut_config.axi_base_mask;
-        this.axi_addr_width = dut_config.axi_addr_width;
-        this.axi_data_width = dut_config.axi_data_width;
+    function new(uart_config_t dut_cfg);
+        this.device = dut_cfg.device;
+        this.rx_enable = dut_cfg.rx_enable;
+        this.tx_enable = dut_cfg.tx_enable;
+        this.axi_base_addr = dut_cfg.axi_base_addr;
+        this.axi_base_mask = dut_cfg.axi_base_mask;
+        this.axi_addr_width = dut_cfg.axi_addr_width;
+        this.axi_data_width = dut_cfg.axi_data_width;
     endfunction: new
 
     // Returns the 32-bit aligned register address

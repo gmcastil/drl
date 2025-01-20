@@ -8,15 +8,18 @@ module top #(
     parameter int           TX_ENABLE
 );
 
+    // Package imports -- {{{
     import uart_tb_pkg::*;
     import uart_tests_pkg::*;
     import axi4l_pkg::*;
+    // }}}
 
     // Parameters -- {{{
-    //
+
     // Required for the the UART AXI4-Lite interface instance
     parameter UART_AXI_ADDR_WIDTH = 32;
     parameter UART_AXI_DATA_WIDTH = 32;
+
     // Indicate how long to assert the POR on each domain
     parameter RST_ASSERT_CNT = 10;
     // }}}
@@ -93,17 +96,16 @@ module top #(
         ->rst_done;
     end
     // }}}
-    
-    logic [31:0] data;
-    axi4l_resp_t resp;
+
     // Simulation main body -- {{{
     initial begin
 
-        // This lets us grab the extended BFM that is embedded in the interface which serves as
-        // a container
+        // This lets us grab the extended BFM that is embedded in the
+        // interface which serves as a kind of container
         axi4l_bfm_base #(UART_AXI_ADDR_WIDTH, UART_AXI_DATA_WIDTH) axi4l_bfm;
         axi4l_bfm = uart_if.bfm;
 
+        // DUT configuration
         dut_cfg = '{
             device: DEVICE,
             rx_enable: bit'(RX_ENABLE),
@@ -117,7 +119,7 @@ module top #(
         @(rst_done);
 
         test_case = new(axi4l_bfm, dut_cfg);
-        fork 
+        fork
             test_case.run();
         join_none
 

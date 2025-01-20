@@ -6,8 +6,8 @@ class uart_test_scratch #(
     AXI_DATA_WIDTH
 );
 
-    function new(axi4l_bfm_base #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) axi4l_bfm, uart_config_t cfg);
-        super.new(axi4l_bfm, cfg);
+    function new(axi4l_bfm_base #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) axi4l_bfm, uart_config_t dut_cfg);
+        super.new(axi4l_bfm, dut_cfg);
     endfunction: new
 
     task automatic run();
