@@ -19,11 +19,12 @@ specialized base classes
 
 ### Properties
 
-| **Property**        | **Type**          | **Default Value** | **Description**                                                                 |
-|----------------------|-------------------|-------------------|---------------------------------------------------------------------------------|
+| **Property**        | **Type**          | **Default Value** | **Description**                                                                |
+|---------------------|-------------------|-------------------|--------------------------------------------------------------------------------|
 | `name`              | `string`          | `""`              | Name of the component instance, used for logging and debugging.                |
 | `parent`            | `component_base`  | `null`            | Reference to the parent component in the hierarchy.                            |
 | `current_log_level` | `log_level_t`     | `LOG_INFO`        | The log level for this component; messages below this level are filtered out.  |
+| `children`          | `component_base[]` | `[]`             | List of all child components instantiated by this instance                     |
 
 ### Constructor
 
@@ -32,6 +33,12 @@ specialized base classes
 | `function new(string name, component_base parent = null)` | - `name`: The name of the component.<br> - `parent`: A reference to the parent component (optional). | Initializes the `component_base` instance, setting its name and parent. |
 
 ### Methods
+
+#### Children Management
+| **Method**                          | **Arguments**                   | **Description**                                                                 |
+|-------------------------------------|---------------------------------|---------------------------------------------------------------------------------|
+| `function void add_child(component_base child)` | `child`: The child component to add. | Adds a child component to the `children` array.                                |
+| `function component_base[] get_children()` | None                          | Returns the list of child components.                                          |
 
 #### Lifecycle Phases
 
