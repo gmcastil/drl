@@ -72,12 +72,10 @@ the `build_phase`
 | `virtual task print_hierarchy()`    | None                                     | Prints the entire hierarchy of components starting from this instance.         |
 
 ### Notes for Developers
-1. **Log Levels**: The `log_level_t` type and related constants (e.g., `LOG_DEBUG`, `LOG_INFO`) are defined in `common_pkg`. Components inherit their initial log level from the `default_log_level` in `common_pkg`, but this can be overridden at instantiation or runtime.
-2. **Extensibility**: The `component_base` class is generic and reusable. Users are expected to extend it for specific use cases.
-3. **Logging Flexibility**: Log levels ensure debug information is accessible without overwhelming the output.
-
+1. The `log_level_t` type and related constants (e.g., `LOG_DEBUG`, `LOG_INFO`) are defined in `common_pkg`. Components inherit their initial log level from the `default_log_level` in `common_pkg`, but this can be overridden at instantiation or runtime.
+2. The `component_base` class is generic and reusable. Users are expected to extend it for specific use cases.
+3. Log levels ensure debug information is accessible without overwhelming the output.
 ---
-
 ## `env_base`
 
 The `env_base` class is the foundational class for building verification
@@ -105,7 +103,6 @@ environment-specific properties as needed.
 |-------------|----------------------------------------|---------------------------------------------------------------------------------|
 | `function new(string name, component_base parent = null)` | - `name`: The name of the environment.<br> - `parent`: A reference to the parent component (optional). | Initializes the environment instance, setting its name and parent. |
 
-
 ## Methods
 
 ### Lifecycle Phases
@@ -119,11 +116,8 @@ environment-specific properties as needed.
 
 ## Notes for Developers
 
-1. **Extensibility**:
-   - The `env_base` class is designed to be extended by environment-specific classes (e.g., `uart_env`, `codec_env`).
-   - Derived classes should define and manage their own components (e.g., drivers, monitors, scoreboards).
-2. **Lifecycle Phase Usage**:
-   - Derived classes are responsible for implementing the lifecycle phases to instantiate, connect, and manage their sub-components.
-3. **Hierarchical Management**:
-   - The `env_base` class inherits child management functionality from `component_base`, allowing derived environments to register sub-components dynamically using `add_child`.
+1. The `env_base` class is designed to be extended by environment-specific classes (e.g., `uart_env`, `codec_env`). Derived classes should define and manage their own components (e.g., drivers, monitors, scoreboards).
+2. Derived classes are responsible for implementing the lifecycle phases to instantiate, connect, and manage their sub-components.
+3. The `env_base` class inherits child management functionality from `component_base`, allowing derived environments to register sub-components dynamically using `add_child`.
+---
 
