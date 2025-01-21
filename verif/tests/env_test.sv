@@ -32,12 +32,6 @@ class env_test extends base_test;
         env.log(LOG_WARNING, "warning");
         env.log(LOG_ERROR, "error");
         env.log(LOG_FATAL, "fatal");
-        env.set_log_level(LOG_WARNING);
-        env.log(LOG_DEBUG, "debug");
-        env.log(LOG_INFO, "info");
-        env.log(LOG_WARNING, "warning");
-        env.log(LOG_ERROR, "error");
-        env.log(LOG_FATAL, "fatal");
         $finish;
     endtask
 

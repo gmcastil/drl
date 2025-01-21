@@ -8,5 +8,5 @@ typedef enum {
 } log_level_t;
 
 // Default log level for new testbench components (can be overriden locally)
-localparam log_level_t default_log_level = LOG_INFO;
+log_level_t default_log_level = LOG_INFO;
 

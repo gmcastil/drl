@@ -16,5 +16,6 @@ vsim "${1}" \
     -classdebug \
     -voptargs=+acc \
     +TESTNAME=env_test \
+    +LOG_LEVEL=DEBUG \
     -do 'log -r \*; run -all; exit' -Ldir ../rundir work.top
 
