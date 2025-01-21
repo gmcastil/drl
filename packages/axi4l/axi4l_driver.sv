@@ -2,6 +2,7 @@ class axi4l_driver #(
     parameter int AXI_ADDR_WIDTH,
     parameter int AXI_DATA_WIDTH
 );
+    
 
     mailbox #(axi4l_transaction#(AXI_ADDR_WIDTH, AXI_DATA_WIDTH)) txn_queue;
     axi4l_bfm_base #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) axi4l_bfm;
@@ -23,6 +24,7 @@ class axi4l_driver #(
 
         $display("[DRIVER] Started AXI4 Lite driver");
         $fflush;
+
         forever begin
             this.txn_queue.get(txn);
             case (txn.kind)
