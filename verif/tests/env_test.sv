@@ -11,7 +11,7 @@ class env_test extends base_test;
         $display("Running environment test...");
 
         // Instantiate the environment
-        this.env = new("ENV", null);
+        env = new("ENV", null);
 
         // Execute lifecycle phases
         env.build_phase();
@@ -26,6 +26,18 @@ class env_test extends base_test;
         env.final_phase();
         $display("Environment final phase completed.");
 
+        $display("current log level = %s", env.get_log_level());
+        env.log(LOG_DEBUG, "debug");
+        env.log(LOG_INFO, "info");
+        env.log(LOG_WARNING, "warning");
+        env.log(LOG_ERROR, "error");
+        env.log(LOG_FATAL, "fatal");
+        env.set_log_level(LOG_WARNING);
+        env.log(LOG_DEBUG, "debug");
+        env.log(LOG_INFO, "info");
+        env.log(LOG_WARNING, "warning");
+        env.log(LOG_ERROR, "error");
+        env.log(LOG_FATAL, "fatal");
         $finish;
     endtask
 

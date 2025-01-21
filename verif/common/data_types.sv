@@ -6,3 +6,7 @@ typedef enum {
     LOG_ERROR,              // Errors requiring attention
     LOG_FATAL               // Critical issues that halt simulation
 } log_level_t;
+
+// Default log level for new testbench components (can be overriden locally)
+localparam log_level_t default_log_level = LOG_INFO;
+

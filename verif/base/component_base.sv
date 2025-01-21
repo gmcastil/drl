@@ -1,9 +1,12 @@
 class component_base;
 
     string name;
+
     component_base parent;
     typedef component_base children_t [$];
     children_t children;
+
+    log_level_t current_log_level;
 
     function new(string name, component_base parent = null);
         this.name = name;
@@ -11,6 +14,7 @@ class component_base;
         if (parent != null) begin
             parent.add_child(this);
         end
+        this.current_log_level = default_log_level;
     endfunction: new
 
     virtual task build_phase();
@@ -43,6 +47,20 @@ class component_base;
             this.children[i].print_hierarchy();
         end
     endtask: print_hierarchy
+
+    function void set_log_level(log_level_t level);
+        this.current_log_level = level;
+    endfunction: set_log_level
+
+    function log_level_t get_log_level();
+        return this.current_log_level;
+    endfunction: get_log_level
+
+    function void log(log_level_t level, string msg);
+        if (level >= this.current_log_level) begin
+            $display("[%0t] [%s] [%s] %s", $time, this.name, level.name(), msg);
+        end
+    endfunction: log
 
 endclass: component_base
 
