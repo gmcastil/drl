@@ -21,6 +21,7 @@ package axi4l_pkg;
         parameter int DATA_WIDTH
     );
 
+        pure virtual task automatic reset(int unsigned count);
         pure virtual task automatic read(input logic [ADDR_WIDTH-1:0] rd_addr, output logic [DATA_WIDTH-1:0] rd_data, axi4l_resp_t rd_resp);
         pure virtual task automatic write(input logic [ADDR_WIDTH-1:0] wr_addr, input logic [DATA_WIDTH-1:0] wr_data, input logic [(DATA_WIDTH/8)-1:0] wr_be, output axi4l_resp_t wr_resp);
         pure virtual function void display();

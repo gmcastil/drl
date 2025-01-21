@@ -13,16 +13,18 @@ class uart_test_scratch #(
     task automatic run();
         uart_scratch_seq #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) seq;
 
-        if (this.env == null) begin
-            $fatal(0, "Error: Test environment not created");
-        end else begin
-            $display("[%0t] [TEST] Test started", $time);
-            fork begin
-                this.env.run();
-            end join_none
-        end
-        seq = new(this.env.sequencer);
-        seq.run();
+        this.env.initialize();
+        wait(this.env.state == INITIALIZED);
+        /* if (this.env == null) begin */
+        /*     $fatal(0, "Error: Test environment not created"); */
+        /* end else begin */
+        /*     $display("[%0t] [TEST] Test started", $time); */
+        /*     fork begin */
+        /*         this.env.run(); */
+        /*     end join_none */
+        /* end */
+        /* seq = new(this.env.sequencer); */
+        /* seq.run(); */
 
         #1us;
         ->test_done;

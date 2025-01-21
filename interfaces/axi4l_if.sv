@@ -52,6 +52,33 @@ interface axi4l_if #(
 
     class axi4l_bfm extends axi4l_bfm_base #(ADDR_WIDTH, DATA_WIDTH);
 
+        bit reset_done;
+
+        function new();
+            this.reset_done = 1'b0;
+        endfunction: new
+
+
+        task automatic reset(int unsigned count);
+
+            $display("[BFM] Beginning reset");
+            // Reset read channel
+            cb_master.araddr <= 'bX;
+            cb_master.arvalid <= 1'b0;
+            cb_master.rready <= 1'b0;
+            // Reset write and write response channel
+            cb_master.awaddr <= 'bX;
+            cb_master.awvalid <= 1'b0;
+            cb_master.wdata <= 'bX;
+            cb_master.wvalid <= 1'b0;
+            cb_master.wstrb <= 'bX;
+
+            repeat (count) @(cb_master);
+            this.reset_done = 1'b1;
+            $display("[BFM] Reset complete");
+
+        endtask: reset
+
         // Perform an AXI4-Lite read transaction
         task automatic read(input logic [ADDR_WIDTH-1:0] rd_addr, output logic [DATA_WIDTH-1:0] rd_data, output axi4l_resp_t rd_resp);
 
