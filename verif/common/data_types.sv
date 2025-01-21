@@ -6,4 +6,3 @@ typedef enum {
     LOG_ERROR,              // Errors requiring attention
     LOG_FATAL               // Critical issues that halt simulation
 } log_level_t;
-
