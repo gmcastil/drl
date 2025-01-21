@@ -2,6 +2,8 @@ module top;
 
     import tests_pkg::*;
 
+    bit clk;
+
     initial begin
         base_test test;
         string test_name;

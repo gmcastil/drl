@@ -12,7 +12,7 @@ source "../../tools.conf" >/dev/null 2>&1 || \
 MODELSIM="$(readlink -f ./modelsim.ini)"
 export MODELSIM
 
-vsim -c \
+vsim "${1}" \
     -classdebug \
     -voptargs=+acc \
     +TESTNAME=env_test \
