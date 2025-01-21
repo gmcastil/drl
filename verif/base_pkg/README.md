@@ -8,12 +8,12 @@ components.
 
 ### Overview
 The `component_base` class:
-* Serves as the root class for all verification componetns (e.g., `env_base`,
+- Serves as the root class for all verification componetns (e.g., `env_base`,
   `driver_base`).
-* Provides shared functionality and structure including
-    - Hierarchical organization (e.g., `name`, and `parent`)
-    - Lifecycle phases (`build_phase`, `connect_phase`, etc.)
-    - Utility methods (e.g., logging and hierarchical names)
+- Provides shared functionality and structure including
+  - Hierarchical organization (e.g., `name`, and `parent`)
+  - Lifecycle phases (`build_phase`, `connect_phase`, etc.)
+  - Utility methods (e.g., logging and hierarchical names)
 It is not directly used in the verification environment but is inherited by
 specialized base classes
 
@@ -34,12 +34,6 @@ specialized base classes
 
 ### Methods
 
-#### Children Management
-| **Method**                          | **Arguments**                   | **Description**                                                                 |
-|-------------------------------------|---------------------------------|---------------------------------------------------------------------------------|
-| `function void add_child(component_base child)` | `child`: The child component to add. | Adds a child component to the `children` array.                                |
-| `function component_base[] get_children()` | None                          | Returns the list of child components.                                          |
-
 #### Lifecycle Phases
 
 | **Method**             | **Arguments** | **Description**                                                                 |
@@ -48,6 +42,18 @@ specialized base classes
 | `virtual task connect_phase()` | None          | A hook for connecting sub-components or establishing relationships.            |
 | `virtual task run_phase()`     | None          | A hook for defining runtime behavior, such as driving stimulus or monitoring.  |
 | `virtual task final_phase()` *(Optional)* | None          | A hook for cleanup or reporting after the simulation completes.                |
+
+The `final_phase` is optional and provides a hook for cleanup tasks or
+generating reports after all activity is completed.
+
+#### Children Management
+| **Method**                          | **Arguments**                   | **Description**                                                                 |
+|-------------------------------------|---------------------------------|---------------------------------------------------------------------------------|
+| `function void add_child(component_base child)` | `child`: The child component to add. | Adds a child component to the `children` array.                                |
+| `function component_base[] get_children()` | None                          | Returns the list of child components.                                          |
+
+Child components must be called explicitly when instantiating sub-components in
+the `build_phase`
 
 #### Logging
 
