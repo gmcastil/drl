@@ -19,15 +19,6 @@ class driver_base extends component_base;
     virtual task run_phase();
         super.run_phase();
         log(LOG_INFO, "Driver run phase");
-        forever begin
-            transaction_base txn;
-            txn_queue.get(txn);
-            if (!txn) begin
-                log(LOG_WARNING, "Null transaction received, skipping");
-                continue;
-            end
-            execute_transaction(txn);
-        end
     endtask: run_phase
 
     virtual task final_phase();
@@ -35,6 +26,17 @@ class driver_base extends component_base;
         log(LOG_INFO, "Driver final phase");
     endtask: final_phase
 
+    task add_transaction(transaction_base txn);
+        this.txn_queue.put(txn);
+    endtask: add_transaction
+
+    // Intended to be overriden by derived driver class
+    virtual task execute(transaction_base txn);
+        log(LOG_ERROR, "Derived class did not implement execute() method");
+        $fatal;
+    endtask: execute
+
+endclass: driver_base
 
     
 

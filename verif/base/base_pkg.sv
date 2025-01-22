@@ -7,6 +7,7 @@ package base_pkg;
 `include "monitor_base.sv"
 `include "scoreboard_base.sv"
 `include "sequencer_base.sv"
+`include "transaction_base.sv"
 `include "driver_base.sv"
 
 endpackage: base_pkg
