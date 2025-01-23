@@ -82,7 +82,7 @@ The `env_base` class is the foundational class for building verification
 environments. It extends the `component_base` class and provides shared
 functionality and structure for all derived verification environments.
 
-## Overview
+### Overview
 The `env_base` class:
 - Provides standardized lifecycle phases (e.g., `build_phase`, `connect_phase`).
 - Acts as a container for sub-components (e.g., drivers, monitors, scoreboards).
@@ -92,20 +92,20 @@ This class is not intended to be used directly in the verification
 environment but should be inherited by specialized environment classes (e.g.,
 `uart_env` or `codec_env`).
 
-## Properties
+### Properties
 The `env_base` class does not define additional properties beyond those
 inherited from `component_base`. Derived classes are expected to define
 environment-specific properties as needed.
 
-## Constructor
+### Constructor
 
 | **Method**  | **Arguments**                          | **Description**                                                                 |
 |-------------|----------------------------------------|---------------------------------------------------------------------------------|
 | `function new(string name, component_base parent = null)` | - `name`: The name of the environment.<br> - `parent`: A reference to the parent component (optional). | Initializes the environment instance, setting its name and parent. |
 
-## Methods
+### Methods
 
-### Lifecycle Phases
+#### Lifecycle Phases
 
 | **Method**             | **Arguments** | **Description**                                                                 |
 |------------------------|---------------|---------------------------------------------------------------------------------|
@@ -120,4 +120,5 @@ environment-specific properties as needed.
 2. Derived classes are responsible for implementing the lifecycle phases to instantiate, connect, and manage their sub-components.
 3. The `env_base` class inherits child management functionality from `component_base`, allowing derived environments to register sub-components dynamically using `add_child`.
 ---
+
 
