@@ -22,8 +22,8 @@ module top;
                 "INFO": begin
                     default_log_level = LOG_INFO;
                 end
-                "WARNING": begin
-                    default_log_level = LOG_WARNING;
+                "WARN": begin
+                    default_log_level = LOG_WARN;
                 end
                 "ERROR": begin
                     default_log_level = LOG_ERROR;

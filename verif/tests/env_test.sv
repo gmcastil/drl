@@ -29,7 +29,7 @@ class env_test extends base_test;
         $display("current log level = %s", env.get_log_level());
         env.log(LOG_DEBUG, "debug");
         env.log(LOG_INFO, "info");
-        env.log(LOG_WARNING, "warning");
+        env.log(LOG_WARN, "warning");
         env.log(LOG_ERROR, "error");
         env.log(LOG_FATAL, "fatal");
         $finish;

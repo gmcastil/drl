@@ -114,11 +114,45 @@ environment-specific properties as needed.
 | `virtual task run_phase()`     | None          | A hook for defining runtime behavior.                                           |
 | `virtual task final_phase()` *(Optional)* | None          | A hook for cleanup or reporting after the simulation completes.                 |
 
-## Notes for Developers
+### Notes for Developers
 
 1. The `env_base` class is designed to be extended by environment-specific classes (e.g., `uart_env`, `codec_env`). Derived classes should define and manage their own components (e.g., drivers, monitors, scoreboards).
 2. Derived classes are responsible for implementing the lifecycle phases to instantiate, connect, and manage their sub-components.
 3. The `env_base` class inherits child management functionality from `component_base`, allowing derived environments to register sub-components dynamically using `add_child`.
 ---
 
+## `driver_base`
+
+---
+
+
+## `sequencer_base`
+
+### Description:
+The `sequencer_base` class manages the execution of sequences and the generation of transactions, acting as the bridge between sequences (high-level operations) and the driver (low-level transaction execution). It is responsible for retrieving sequence objects, processing them, and forwarding the resulting transactions to the driver.
+
+### Responsibilities:
+- Retrieve and manage sequence objects from a queue or mailbox.
+- Execute sequence logic to generate transactions.
+- Schedule transactions and pass them to the driver for execution.
+- Provide hooks for customizing sequencing behavior, such as prioritization or error handling.
+
+### Methods:
+
+| Method                     | Description                                                                                 |
+|----------------------------|---------------------------------------------------------------------------------------------|
+| `get_next_transaction()`   | Fetches the next transaction or sequence object for execution. Typically pulls from a queue. |
+| `start_sequence(seq_obj)`  | Starts a specific sequence, initializing its state and preparing it for execution.           |
+| `run_sequence()`           | The main execution loop for processing sequences. Pulls sequences and sends transactions.   |
+| `add_sequence(seq_obj)`    | Adds a sequence object to the internal queue or scheduling mechanism.                       |
+| `execute_transaction(txn)` | Sends a transaction to the driver for execution.                                            |
+| `clear_sequences()`        | Clears any pending sequences or transactions, resetting the sequencer state.                |
+
+### Lifecycle Phases:
+The `sequencer_base` follows the same lifecycle phases as `component_base` to ensure consistent integration within the verification framework:
+- **`build()`**: Allocates resources (e.g., mailboxes or queues) and initializes internal structures.
+- **`connect()`**: Establishes connections with other components, such as the driver or environment.
+- **`run()`**: Implements the main loop for processing sequences and forwarding transactions.
+- **`shutdown()`**: Cleans up pending sequences and ensures the sequencer stops gracefully.
+- **`cleanup()`**: Frees resources and performs final cleanup after the test completes.
 

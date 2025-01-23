@@ -1,4 +1,4 @@
-class component_base;
+virtual class component_base;
 
     string name;
 
@@ -6,9 +6,9 @@ class component_base;
     typedef component_base children_t [$];
     children_t children;
 
-    log_level_t current_log_level;
+    log_level_t current_log_level = default_log_level;
 
-    function new(string name, component_base parent = null);
+    function new(string name = "component_base", component_base parent = null);
         this.name = name;
         this.parent = parent;
         if (parent != null) begin
@@ -16,6 +16,13 @@ class component_base;
         end
         this.current_log_level = default_log_level;
     endfunction: new
+
+    /*
+     * No provision for synchronizing lifecycle management is made here. This could lead
+     * to race conditions, missed activity, incomplete scoreboards, etc. The canonical
+     * way to deal with this is with objections (e.g., scoped global counters) but I
+     * want to get something underway first before I introduce that.
+     */
 
     virtual task build_phase();
         $display("[%s] build_phase called", name);
@@ -33,6 +40,13 @@ class component_base;
         $display("[%s] final_phase called", name);
     endtask: final_phase
 
+    /* 
+     * There's a potential to possibly introduce recursive lifecycle management here
+     * but we'll save it for later once it become obviously a thing to add.
+     */
+
+    /* Hierarchy might start to matter latter if I start introducing multiple envs */
+
     function void add_child(component_base child);
         this.children.push_back(child);
     endfunction: add_child
@@ -47,6 +61,10 @@ class component_base;
             this.children[i].print_hierarchy();
         end
     endtask: print_hierarchy
+
+    function string get_name();
+        return this.name;
+    endfunction: get_name
 
     function void set_log_level(log_level_t level);
         this.current_log_level = level;
