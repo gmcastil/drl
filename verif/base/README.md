@@ -124,8 +124,6 @@ environment-specific properties as needed.
 ## `driver_base`
 
 ---
-
-
 ## `sequencer_base`
 
 ### Description:

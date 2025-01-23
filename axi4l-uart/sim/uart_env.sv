@@ -6,7 +6,6 @@ class uart_env #(
     uart_config cfg;
     component_state_t state;
 
-    axi4l_bfm_base #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) axi4l_bfm;
     axi4l_driver #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) driver;
     uart_sequencer #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) sequencer;
 
@@ -15,10 +14,9 @@ class uart_env #(
 
     function new(axi4l_bfm_base #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) axi4l_bfm,
                     uart_config cfg);
-        this.axi4l_bfm = axi4l_bfm;
         this.cfg = cfg;
         this.txn_queue = new();
-        this.driver = new(this.axi4l_bfm, this.txn_queue);
+        this.driver = new(axi4l_bfm, this.txn_queue);
         this.sequencer = new(this.txn_queue);
         this.state = UNINITIALIZED;
     endfunction: new

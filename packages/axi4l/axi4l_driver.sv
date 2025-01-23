@@ -3,6 +3,7 @@ class axi4l_driver #(
     parameter int AXI_DATA_WIDTH
 );
     
+    component_state_t state;
 
     mailbox #(axi4l_transaction#(AXI_ADDR_WIDTH, AXI_DATA_WIDTH)) txn_queue;
     axi4l_bfm_base #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) axi4l_bfm;
@@ -13,7 +14,22 @@ class axi4l_driver #(
         if (this.txn_queue == null) begin
             $fatal(0, "Could not create AXI4L driver mailbox");
         end
+        this.state = UNINITIALIZED;
     endfunction: new
+
+    task automatic init();
+        // Check that the communication channel exists and is empty before we start advertising we
+        // can accept transactions
+        if (this.txn_queue == null) begin
+            $fatal(0, "[ENV] Transaction mailbox is null. Initialization failed.");
+        end else if (this.txn_queue.num() != 0) begin
+            $fatal(0, "[ENV] Transaction mailbox non-empty during initialization.");
+        end
+
+        // Reset the AXI4-Lite BFM
+        this.axi4l_bfm.reset(10);
+        this.state = INITIALIZED;
+    endtask: init
 
     // Pull transactions from the mailbox and process them in the order they arrive
     task automatic run();
