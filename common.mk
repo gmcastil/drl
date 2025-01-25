@@ -22,6 +22,7 @@ VCOM		:= vcom
 VLIB		:= vlib
 VDEL		:= vdel
 VMAP		:= vmap
+VDIR		:= vdir
 
 # Specify the path to the modelsim.ini file - this forces us to use the local
 # version which references the Xilinx simulation library path
