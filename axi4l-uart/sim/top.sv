@@ -9,8 +9,10 @@ module top #(
 );
 
     // Package imports -- {{{
-    import uart_tb_pkg::*;
-    import uart_tests_pkg::*;
+    /* import uart_tb_pkg::*; */
+    /* import uart_tests_pkg::*; */
+    import common_pkg::*;
+    import base_pkg::*;
     import axi4l_pkg::*;
     // }}}
 
@@ -40,7 +42,11 @@ module top #(
     string test_name;
 
     // Container for the DUT configuration
-    uart_config_t dut_cfg;
+    /* uart_config_t dut_cfg; */
+    // }}}
+
+    // Class instances -- {{{
+    /* uart_test_scratch #(UART_AXI_ADDR_WIDTH, UART_AXI_DATA_WIDTH) test_case; */
     // }}}
 
     // Interfaces -- {{{
@@ -52,10 +58,6 @@ module top #(
         .aclk           (clk),
         .aresetn        (rstn)
     );
-    // }}}
-
-    // Class instances -- {{{
-    uart_test_scratch #(UART_AXI_ADDR_WIDTH, UART_AXI_DATA_WIDTH) test_case;
     // }}}
 
     // DUT instance -- {{{
@@ -99,12 +101,12 @@ module top #(
 
     // Simulation main body -- {{{
     initial begin
-
         // This lets us grab the extended BFM that is embedded in the
         // interface which serves as a kind of container
         axi4l_bfm_base #(UART_AXI_ADDR_WIDTH, UART_AXI_DATA_WIDTH) axi4l_bfm;
         axi4l_bfm = uart_if.bfm;
 
+/*
         // DUT configuration
         dut_cfg = '{
             device: DEVICE,
@@ -124,6 +126,8 @@ module top #(
         join_none
 
         @(test_case.test_done);
+        */
+        @(rst_done);
         $finish;
     end
     // }}}

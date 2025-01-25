@@ -2,8 +2,6 @@
 # are set and exported here
 include ../tools.conf
 include ../common.mk
-# Verification components and targets
-include ../verif/verif.mk
 
 # Sanity checks here
 ifndef XILINX_SIMLIB_DIR
@@ -40,11 +38,10 @@ DUT_FILES		:= $(SRC_DIR)/uart.f
 
 .PHONY: sim
 sim: verif dut
-	@echo "Would build project testbench components"
-	# $(VLOG) -work $(WORK) +incdir+$(DRL_DIR)/packages/axi4l -sv $(DRL_DIR)/packages/axi4l/axi4l_pkg.sv
-	# $(VLOG) -work $(WORK) -sv $(DRL_DIR)/interfaces/axi4l_if.sv
-	# $(VLOG) -work $(WORK) -sv $(TB_DIR)/uart_wrapper.sv
-	# $(VLOG) -work $(WORK) -sv $(TB_DIR)/top.sv
+	$(VLOG) -work $(WORK) +incdir+$(DRL_DIR)/packages/axi4l -sv $(DRL_DIR)/packages/axi4l/axi4l_pkg.sv
+	$(VLOG) -work $(WORK) -sv $(DRL_DIR)/interfaces/axi4l_if.sv
+	$(VLOG) -work $(WORK) -sv $(TB_DIR)/uart_wrapper.sv
+	$(VLOG) -work $(WORK) -sv $(TB_DIR)/top.sv
 
 .PHONY: dut
 dut: lib
@@ -54,6 +51,9 @@ dut: lib
 	$(VCOM) -work $(WORK) $(VCOM_FLAGS) $(DRL_DIR)/axi4l-regs/src/rtl/axi4l_regs.vhd
 	$(VCOM) -work $(WORK) $(VCOM_FLAGS) $(DRL_DIR)/axi4l-regs/src/rtl/reg_block.vhd
 	$(VCOM) -work $(WORK) $(VCOM_FLAGS) -f $(DUT_FILES)
+
+# Verification components and targets
+include ../verif/verif.mk
 
 # Create an empty work directory at rundir/$(WORK)
 .PHONY: lib
