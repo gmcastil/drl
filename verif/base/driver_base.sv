@@ -8,25 +8,25 @@ virtual class driver_base extends component_base;
 
     virtual task build_phase();
         super.build_phase();
-        log(LOG_INFO, "Driver biuld phase");
+        log(LOG_DEBUG, "Driver base build phase");
     endtask: build_phase
 
     // Needs to connect the driver to the sequencer in this phase
     virtual task connect_phase();
         super.connect_phase();
-        log(LOG_INFO, "Driver connect phase");
+        log(LOG_DEBUG, "Driver base connect phase");
     endtask: connect_phase
 
     // Pull transactions from the connected sequencer - derived driver objects will have much more
     // sophisticated run phases
     virtual task run_phase();
         super.run_phase();
-        log(LOG_INFO, "Driver run phase");
+        log(LOG_DEBUG, "Driver base run phase");
     endtask: run_phase
 
     virtual task final_phase();
         super.final_phase();
-        log(LOG_INFO, "Driver final phase");
+        log(LOG_DEBUG, "Driver final phase");
     endtask: final_phase
 
     virtual task process_transaction(transaction_base txn);

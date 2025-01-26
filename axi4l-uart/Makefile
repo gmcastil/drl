@@ -41,6 +41,8 @@ sim: verif dut
 	$(VLOG) -work $(WORK) +incdir+$(DRL_DIR)/packages/axi4l -sv $(DRL_DIR)/packages/axi4l/axi4l_pkg.sv
 	$(VLOG) -work $(WORK) -sv $(DRL_DIR)/interfaces/axi4l_if.sv
 	$(VLOG) -work $(WORK) -sv $(TB_DIR)/uart_wrapper.sv
+	$(VLOG) -work $(WORK) -sv $(TB_DIR)/uart_tb_pkg.sv
+	$(VLOG) -work $(WORK) -sv $(TB_DIR)/tests/uart_tests_pkg.sv
 	$(VLOG) -work $(WORK) -sv $(TB_DIR)/top.sv
 
 .PHONY: dut

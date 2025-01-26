@@ -10,10 +10,12 @@ module top #(
 
     // Package imports -- {{{
     /* import uart_tb_pkg::*; */
-    /* import uart_tests_pkg::*; */
     import common_pkg::*;
     import base_pkg::*;
     import axi4l_pkg::*;
+
+    import uart_tb_pkg::*;
+    import uart_tests_pkg::*;
     // }}}
 
     // Parameters -- {{{
@@ -39,14 +41,10 @@ module top #(
     // Indicates that all external testbench clocks and resets are completed
     event rst_done;
 
-    string test_name;
-
-    // Container for the DUT configuration
-    /* uart_config_t dut_cfg; */
     // }}}
 
     // Class instances -- {{{
-    /* uart_test_scratch #(UART_AXI_ADDR_WIDTH, UART_AXI_DATA_WIDTH) test_case; */
+    uart_test_base #(UART_AXI_ADDR_WIDTH, UART_AXI_DATA_WIDTH) test_case;
     // }}}
 
     // Interfaces -- {{{
@@ -101,12 +99,30 @@ module top #(
 
     // Simulation main body -- {{{
     initial begin
+
+        // Container for the DUT configuration
+        uart_config_t dut_cfg;
+        string test_name;
+
         // This lets us grab the extended BFM that is embedded in the
         // interface which serves as a kind of container
         axi4l_bfm_base #(UART_AXI_ADDR_WIDTH, UART_AXI_DATA_WIDTH) axi4l_bfm;
-        axi4l_bfm = uart_if.bfm;
 
-/*
+        // Set logging for this simulation run before anything else gets instantiated or run
+        string log_level;
+        if ($value$plusargs("LOG_LEVEL=%s", log_level)) begin
+            case (log_level)
+                "DEBUG": begin default_log_level = LOG_DEBUG; end
+                "INFO":  begin default_log_level = LOG_INFO;  end
+                "WARN":  begin default_log_level = LOG_WARN;  end
+                "ERROR": begin default_log_level = LOG_ERROR; end
+                "FATAL": begin default_log_level = LOG_FATAL; end
+                default: begin
+                    $fatal(0, "Unknown log level: %s", log_level);
+                end
+            endcase
+        end
+
         // DUT configuration
         dut_cfg = '{
             device: DEVICE,
@@ -118,9 +134,14 @@ module top #(
             axi_data_width: UART_AXI_DATA_WIDTH
         };
 
-        @(rst_done);
+        test_name = "uart_test_base";
+        axi4l_bfm = uart_if.bfm;
+        
+        // Test cases get called with their name, the AXI4-Lite BFM instance from the interface, and
+        // the DUT configuration
+        test_case = new(test_name, uart_if.bfm, dut_cfg, null);
 
-        test_case = new(axi4l_bfm, dut_cfg);
+/*
         fork
             test_case.run();
         join_none
