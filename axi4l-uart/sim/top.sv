@@ -141,13 +141,16 @@ module top #(
         // the DUT configuration
         test_case = new(test_name, uart_if.bfm, dut_cfg, null);
 
-/*
-        fork
-            test_case.run();
-        join_none
+        test_case.build_phase();
+
+        test_case.connect_phase();
+
+        test_case.run_phase();
+
+        test_case.final_phase();
 
         @(test_case.test_done);
-        */
+
         @(rst_done);
         $finish;
     end
