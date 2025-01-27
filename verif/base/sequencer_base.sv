@@ -27,7 +27,7 @@ virtual class sequencer_base extends component_base;
     virtual task add_transaction(transaction_base txn);
         this.txn_queue_sem.get();
         if (this.txn_queue == null) begin
-            log(LOG_WARN, "Sequencer queue is uninitialized");
+            log(LOG_WARN, "", "Sequencer queue is uninitialized");
         end else begin
             this.txn_queue.put(txn);
         end
@@ -37,7 +37,7 @@ virtual class sequencer_base extends component_base;
     virtual task get_next_transaction(ref transaction_base txn);
         this.txn_queue_sem.get();
         if (this.txn_queue == null) begin
-            log(LOG_WARN, "Sequencer queue is uninitialized");
+            log(LOG_WARN, "", "Sequencer queue is uninitialized");
         end else begin
             this.txn_queue.get(txn);
         end
@@ -50,7 +50,7 @@ virtual class sequencer_base extends component_base;
         bit retval;
 
         if (this.txn_queue == null) begin
-            log(LOG_WARN, "Sequencer queue is uninitialized");
+            log(LOG_WARN, "", "Sequencer queue is uninitialized");
         end 
 
         if (this.txn_queue.num() == 0) begin

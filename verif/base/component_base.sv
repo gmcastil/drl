@@ -2,8 +2,7 @@ virtual class component_base;
 
     string name;
     component_base parent;
-    typedef component_base children_t [$];
-    children_t children;
+    component_base children [string];
 
     log_level_t current_log_level = default_log_level;
 
@@ -16,43 +15,15 @@ virtual class component_base;
         this.current_log_level = default_log_level;
     endfunction: new
 
-    /*
-     * No provision for synchronizing lifecycle management is made here. This could lead
-     * to race conditions, missed activity, incomplete scoreboards, etc. The canonical
-     * way to deal with this is with objections (e.g., scoped global counters) but I
-     * want to get something underway first before I introduce that.
-     */
-
-    virtual task build_phase();
-        log(LOG_DEBUG, "Component base build phase");
-    endtask: build_phase
-
-    virtual task connect_phase();
-        log(LOG_DEBUG, "Component base connect phase");
-    endtask: connect_phase
-
-    virtual task run_phase();
-        log(LOG_DEBUG, "Component base run phase");
-    endtask: run_phase
-
-    virtual task final_phase();
-        log(LOG_DEBUG, "Component base final phase");
-    endtask: final_phase
-
-    /* 
-     * There's a potential to possibly introduce recursive lifecycle management here
-     * but we'll save it for later once it become obviously a thing to add.
-     */
-
-    /* Hierarchy might start to matter latter if I start introducing multiple envs */
-
+    /* Parent-child management and context functions */
     function void add_child(component_base child);
-        this.children.push_back(child);
+        if (this.children.exists(child.name)) begin
+            // If the child exists in the hierarchy then something has gone very wrong
+            log(LOG_ERROR, "HIERARCHY", $sformatf("Child '%s' was already found in hierarchy", child.name));
+        end else begin
+            this.children[child.name] = child;
+        end
     endfunction: add_child
-
-    function children_t get_children();
-        return this.children;
-    endfunction: get_children
 
     virtual task print_hierarchy();
         $display("[%s]", this.name);
@@ -65,6 +36,48 @@ virtual class component_base;
         return this.name;
     endfunction: get_name
 
+    function string get_full_hierarchical_name();
+        if (this.parent != null) begin
+            return {this.parent.get_full_hierarchical_name(), ".", this.name};
+        end
+        return this.name;
+    endfunction: get_full_hierarchical_name
+
+    /*
+     * No provision for synchronizing lifecycle management is made here. This could lead
+     * to race conditions, missed activity, incomplete scoreboards, etc. The canonical
+     * way to deal with this is with objections (e.g., scoped global counters) but I
+     * want to get something underway first before I introduce that.
+     */
+
+    virtual task build_phase();
+        log(LOG_DEBUG, "Component base build phase");
+        foreach (this.children[i]) begin
+            this.children[i].build_phase();
+        end
+    endtask: build_phase
+
+    virtual task connect_phase();
+        log(LOG_DEBUG, "Component base connect phase");
+        foreach (this.children[i]) begin
+            this.children[i].connect_phase();
+        end
+    endtask: connect_phase
+
+    virtual task run_phase();
+        log(LOG_DEBUG, "Component base run phase");
+        foreach (this.children[i]) begin
+            this.children[i].run_phase();
+        end
+    endtask: run_phase
+
+    virtual task final_phase();
+        log(LOG_DEBUG, "Component base final phase");
+        foreach (this.children[i]) begin
+            this.children[i].final_phase();
+        end
+    endtask: final_phase
+
     function void set_log_level(log_level_t level);
         this.current_log_level = level;
     endfunction: set_log_level
@@ -73,9 +86,20 @@ virtual class component_base;
         return this.current_log_level;
     endfunction: get_log_level
 
-    function void log(log_level_t level, string msg);
+    function void log(log_level_t level, string msg, string id = "");
+        string level_name; 
+        string msg_fmt;
         if (level >= this.current_log_level) begin
-            $display("[%0t] [%s] [%s] %s", $time, this.name, level.name(), msg);
+            // UVM like log messages, with optional ID field
+            if (id == "") begin
+                msg_fmt = "%s @ %0t: (%s) %s";
+            end else begin
+                msg_fmt = "%s @ %0t: (%s) [%s] %s";
+            end
+            level_name = level.name();
+            $display(msg_fmt,
+                        level_name.substr(4, level_name.len()-1),
+                        $time, this.get_full_hierarchical_name(), id, msg);
         end
     endfunction: log
 

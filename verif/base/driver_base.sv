@@ -1,6 +1,6 @@
 virtual class driver_base extends component_base;
 
-    protected sequencer_base sequencer;
+    /* protected sequencer_base sequencer; */
 
     function new(string name = "driver_base", component_base parent = null);
         super.new(name, parent);
@@ -8,30 +8,30 @@ virtual class driver_base extends component_base;
 
     virtual task build_phase();
         super.build_phase();
-        log(LOG_DEBUG, "Driver base build phase");
+        log(LOG_DEBUG, "BUILD PHASE", "Driver base build phase");
     endtask: build_phase
 
     // Needs to connect the driver to the sequencer in this phase
     virtual task connect_phase();
         super.connect_phase();
-        log(LOG_DEBUG, "Driver base connect phase");
+        log(LOG_DEBUG, "CONNECT PHASE", "Driver base connect phase");
     endtask: connect_phase
 
     // Pull transactions from the connected sequencer - derived driver objects will have much more
     // sophisticated run phases
     virtual task run_phase();
         super.run_phase();
-        log(LOG_DEBUG, "Driver base run phase");
+        log(LOG_DEBUG, "RUN PHASE", "Driver base run phase");
     endtask: run_phase
 
     virtual task final_phase();
         super.final_phase();
-        log(LOG_DEBUG, "Driver final phase");
+        log(LOG_DEBUG, "FINAL PHASE", "Driver final phase");
     endtask: final_phase
 
-    virtual task process_transaction(transaction_base txn);
-        $fatal("[%s] process_transaction() must be overridden in a derived class.", name);
-    endtask: process_transaction
+    pure virtual task process_transaction(transaction_base txn);
+        /* $fatal("[%s] process_transaction() must be overridden in a derived class.", name); */
+    /* endtask: process_transaction */
 
 endclass: driver_base
 

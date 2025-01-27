@@ -6,22 +6,22 @@ virtual class env_base extends component_base;
 
     virtual task build_phase();
         super.build_phase();
-        $display("[%s] build_phase: Setting up environment", this.name);
+        log(LOG_DEBUG, "BUILD PHASE", "Environment base build phase");
     endtask: build_phase
 
     virtual task connect_phase();
         super.connect_phase();
-        $display("[%s] connect_phase: Connecting environment components", this.name);
+        log(LOG_DEBUG, "CONNECT PHASE", "Environment base connect phase");
     endtask: connect_phase
 
     virtual task run_phase();
         super.run_phase();
-        $display("[%s] run_phase: Running environment level operations", this.name);
+        log(LOG_DEBUG, "RUN PHASE", "Environment base run phase");
     endtask: run_phase
 
     virtual task final_phase();
         super.final_phase();
-        $display("[%s] final_phase: Cleaning up environemtn", this.name);
+        log(LOG_DEBUG, "FINAL PHASE", "Environment final phase");
     endtask: final_phase
 
 endclass: env_base
