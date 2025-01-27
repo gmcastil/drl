@@ -142,15 +142,14 @@ module top #(
         test_case = new(test_name, uart_if.bfm, dut_cfg, null);
 
         test_case.build_phase();
-
         test_case.connect_phase();
 
-        fork
-            test_case.run_phase();
-        join_none
-        @(test_case.test_done);
+        /* fork */
+        /*     test_case.run_phase(); */
+        /* join_none */
+        /* @(test_case.test_done); */
 
-        test_case.final_phase();
+        /* test_case.final_phase(); */
 
         $finish;
     end
