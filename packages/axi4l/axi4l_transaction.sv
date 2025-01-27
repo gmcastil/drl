@@ -1,7 +1,5 @@
-class axi4l_transaction #(
-    parameter int   AXI_ADDR_WIDTH,
-    parameter int   AXI_DATA_WIDTH
-);
+class axi4l_transaction #(parameter int AXI_ADDR_WIDTH, parameter int AXI_DATA_WIDTH)
+    extends transaction_base;
 
     axi4l_txn_t kind;
     logic [AXI_ADDR_WIDTH-1:0] addr;
@@ -9,8 +7,9 @@ class axi4l_transaction #(
     int position;
     axi4l_resp_t resp;
 
-    function automatic new(axi4l_txn_t kind, logic [AXI_ADDR_WIDTH-1:0] addr,
+    function automatic new(string name, axi4l_txn_t kind, logic [AXI_ADDR_WIDTH-1:0] addr,
                             logic [AXI_DATA_WIDTH-1:0] data=0, int position=0);
+        super.new(name);
         this.kind = kind;
         this.addr = addr;
         if (this.kind != READ) begin
@@ -19,7 +18,7 @@ class axi4l_transaction #(
         end
     endfunction: new
 
-    function automatic void display;
+    function void display;
         if (this.kind != READ) begin
             $display("Type: %-8s Addr: 0x%08x Data: 0x%08x Resp: %-8s Position: %0d",
                         kind.name(), this.addr, this.data, this.resp.name(), this.position);

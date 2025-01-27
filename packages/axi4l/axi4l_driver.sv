@@ -1,25 +1,37 @@
 class axi4l_driver #(parameter int AXI_ADDR_WIDTH, parameter int AXI_DATA_WIDTH)
     extends driver_base;
 
-    /* function new(string name = "axi4l_driver", component_base parent = null); */
-    /*     super.new(name, parent); */
-    /* endfunction: new */
+    axi4l_bfm_base #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) axi4l_bfm;
+    protected mailbox #(axi4l_transaction #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH)) txn_queue;
 
-    /* task build_phase(); */
-    /*     super.build_phase(); */
-    /* endtask: build_phase */
+    function new(string name = "",
+                    axi4l_bfm_base #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) axi4l_bfm,
+                    component_base parent = null);
+        super.new(name, parent);
+        if (axi4l_bfm == null) begin
+            log(LOG_ERROR, "AXI4-Lite BFM is null.", "INIT");
+            $fatal(1);
+        end else begin
+            this.axi4l_bfm = axi4l_bfm;
+            log(LOG_INFO, "Created AXI4-Lite driver");
+        end
+    endfunction: new
 
-    /* task connect_phase(); */
-    /*     super.build_phase(); */
-    /* endtask: connect_phase */
+    function void set_mailbox(mailbox #(axi4l_transaction #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH)) mbox);
+        if (mbox == null) begin
+            log(LOG_ERROR, "Cannot set driver mailbox. Null pointer received.");
+            $fatal(1);
+        end else begin
+            this.txn_queue = mbox;
+        end
+    endfunction: set_mailbox
 
+    task process_transaction(transaction_base txn);
+        $fatal("[%s] process_transaction() must be overridden in a derived class.", name);
+    endtask: process_transaction
 
 endclass: axi4l_driver
     
-    /* component_state_t state; */
-
-    /* mailbox #(axi4l_transaction#(AXI_ADDR_WIDTH, AXI_DATA_WIDTH)) txn_queue; */
-    /* axi4l_bfm_base #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) axi4l_bfm; */
 
     /* function new(axi4l_bfm_base #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) axi4l_bfm, */
     /*                 mailbox #(axi4l_transaction#(AXI_ADDR_WIDTH, AXI_DATA_WIDTH)) txn_queue); */

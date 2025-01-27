@@ -31,6 +31,7 @@ package axi4l_pkg;
 
     endclass: axi4l_bfm_base
 
+`include "axi4l_transaction.sv"
 `include "axi4l_driver.sv"
 
 endpackage: axi4l_pkg
