@@ -15,7 +15,7 @@ package uart_tb_pkg;
     } uart_config_t;
 
 /* `include "uart_config.sv" */
-/* `include "uart_sequencer.sv" */
+`include "uart_sequencer.sv"
 /* `include "uart_scratch_seq.sv" */
 `include "uart_env.sv"
 

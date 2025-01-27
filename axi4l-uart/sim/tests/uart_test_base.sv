@@ -17,36 +17,39 @@ class uart_test_base #(
         axi4l_bfm_base #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH) axi4l_bfm,
         uart_config_t dut_cfg,
         component_base parent = null);
-
         super.new(name, parent);
+        log(LOG_INFO, "Initializing test case components");
 
         this.axi4l_bfm = axi4l_bfm;
         this.dut_cfg = dut_cfg;
-        log(LOG_DEBUG, "UART base test constructor");
+
+        this.env = new("uart_env", this.axi4l_bfm, this);
+
     endfunction: new
 
     virtual task build_phase();
-        super.build_phase();
         log(LOG_INFO, "Build phase started");
-        this.env = new("uart_env", this.axi4l_bfm, this);
-        this.env.build_phase();
-        log(LOG_INFO, "Build phase finished");
+        super.build_phase();
+        log(LOG_INFO, "Build phase completed");
     endtask: build_phase
 
     virtual task connect_phase();
+        log(LOG_INFO, "Connect phase started");
         super.connect_phase();
-        log(LOG_DEBUG, "UART test base connect phase");
+        log(LOG_INFO, "Connect phase completed");
     endtask: connect_phase
 
     virtual task run_phase();
+        log(LOG_DEBUG, "Run phase started");
         super.run_phase();
-        log(LOG_DEBUG, "UART test base run phase");
+        log(LOG_INFO, "Run phase completed");
         ->test_done;
     endtask: run_phase
 
     virtual task final_phase();
+        log(LOG_INFO, "Final phase started");
         super.final_phase();
-        log(LOG_DEBUG, "UART test base final phase");
+        log(LOG_INFO, "Final phase completed");
     endtask: final_phase
 
 endclass: uart_test_base
