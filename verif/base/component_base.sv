@@ -19,7 +19,7 @@ virtual class component_base;
     function void add_child(component_base child);
         if (this.children.exists(child.name)) begin
             // If the child exists in the hierarchy then something has gone very wrong
-            log(LOG_ERROR, "HIERARCHY", $sformatf("Child '%s' was already found in hierarchy", child.name));
+            log(LOG_ERROR, $sformatf("Child '%s' was already found in hierarchy", child.name));
         end else begin
             this.children[child.name] = child;
         end
@@ -51,28 +51,24 @@ virtual class component_base;
      */
 
     virtual task build_phase();
-        log(LOG_DEBUG, "Component base build phase");
         foreach (this.children[i]) begin
             this.children[i].build_phase();
         end
     endtask: build_phase
 
     virtual task connect_phase();
-        log(LOG_DEBUG, "Component base connect phase");
         foreach (this.children[i]) begin
             this.children[i].connect_phase();
         end
     endtask: connect_phase
 
     virtual task run_phase();
-        log(LOG_DEBUG, "Component base run phase");
         foreach (this.children[i]) begin
             this.children[i].run_phase();
         end
     endtask: run_phase
 
     virtual task final_phase();
-        log(LOG_DEBUG, "Component base final phase");
         foreach (this.children[i]) begin
             this.children[i].final_phase();
         end

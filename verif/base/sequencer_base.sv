@@ -1,7 +1,7 @@
 virtual class sequencer_base extends component_base;
 
     semaphore txn_queue_sem;
-    protected mailbox txn_queue;
+    protected mailbox #(transaction_base) txn_queue;
 
     function new(string name = "sequencer_base", component_base parent = null);
         super.new(name, parent);
@@ -24,20 +24,20 @@ virtual class sequencer_base extends component_base;
         super.final_phase();
     endtask: final_phase
 
-    virtual task add_transaction(transaction_base txn);
+    task add_transaction(transaction_base txn);
         this.txn_queue_sem.get();
         if (this.txn_queue == null) begin
-            log(LOG_WARN, "", "Sequencer queue is uninitialized");
+            log(LOG_WARN, "Sequencer queue is uninitialized");
         end else begin
             this.txn_queue.put(txn);
         end
         this.txn_queue_sem.put();
     endtask: add_transaction
 
-    virtual task get_next_transaction(ref transaction_base txn);
+    task get_next_transaction(ref transaction_base txn);
         this.txn_queue_sem.get();
         if (this.txn_queue == null) begin
-            log(LOG_WARN, "", "Sequencer queue is uninitialized");
+            log(LOG_WARN, "Sequencer queue is uninitialized");
         end else begin
             this.txn_queue.get(txn);
         end
@@ -50,7 +50,7 @@ virtual class sequencer_base extends component_base;
         bit retval;
 
         if (this.txn_queue == null) begin
-            log(LOG_WARN, "", "Sequencer queue is uninitialized");
+            log(LOG_WARN, "Sequencer queue is uninitialized");
         end 
 
         if (this.txn_queue.num() == 0) begin
