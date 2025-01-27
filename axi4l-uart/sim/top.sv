@@ -145,13 +145,13 @@ module top #(
 
         test_case.connect_phase();
 
-        test_case.run_phase();
+        fork
+            test_case.run_phase();
+        join_none
+        @(test_case.test_done);
 
         test_case.final_phase();
 
-        @(test_case.test_done);
-
-        @(rst_done);
         $finish;
     end
     // }}}

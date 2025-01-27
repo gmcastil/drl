@@ -1,4 +1,7 @@
-class test_base extends component_base;
+virtual class test_base extends component_base;
+
+    // Signals test case completion
+    event test_done;
 
     function new(string name = "test_base", component_base parent = null);
         super.new(name, parent);
@@ -7,23 +10,23 @@ class test_base extends component_base;
 
     virtual task build_phase();
         super.build_phase();
-        log(LOG_DEBUG, "Test base build phase");
+        log(LOG_DEBUG, "Build phase");
     endtask: build_phase
 
-    // Needs to connect the driver to the sequencer in this phase
     virtual task connect_phase();
         super.connect_phase();
-        log(LOG_DEBUG, "Test base connect phase");
+        log(LOG_DEBUG, "Connect phase");
     endtask: connect_phase
 
     virtual task run_phase();
         super.run_phase();
-        log(LOG_DEBUG, "Test base run phase");
+        log(LOG_DEBUG, "Run phase");
     endtask: run_phase
 
     virtual task final_phase();
         super.final_phase();
-        log(LOG_DEBUG, "Test final phase");
+        log(LOG_DEBUG, "Final phase");
     endtask: final_phase
+
 endclass: test_base
 

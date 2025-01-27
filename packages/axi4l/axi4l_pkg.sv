@@ -1,5 +1,8 @@
 package axi4l_pkg;
 
+    import common_pkg::*;
+    import base_pkg::*;
+
     // AXI4-Lite read and write response types
     typedef enum logic [1:0] {
         RESP_OKAY       = 2'b00,    // Transaction completed successfully
@@ -27,6 +30,8 @@ package axi4l_pkg;
         pure virtual function void display();
 
     endclass: axi4l_bfm_base
+
+`include "axi4l_driver.sv"
 
 endpackage: axi4l_pkg
 

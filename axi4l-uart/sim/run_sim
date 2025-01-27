@@ -20,6 +20,6 @@ vsim -c \
     -GBASE_OFFSET_MASK=32\'h00000FFF \
     -GRX_ENABLE='true' \
     -GTX_ENABLE='true' \
-    +LOG_LEVEL=DEBUG \
+    +LOG_LEVEL=INFO \
     -do 'log -r \*; run -all; exit' -Ldir ../rundir work.top
 

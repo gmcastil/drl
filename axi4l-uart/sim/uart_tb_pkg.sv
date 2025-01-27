@@ -1,5 +1,9 @@
 package uart_tb_pkg;
 
+    import common_pkg::*;
+    import base_pkg::*;
+    import axi4l_pkg::*;
+
     typedef struct {
         string device;
         bit rx_enable;
@@ -13,7 +17,7 @@ package uart_tb_pkg;
 /* `include "uart_config.sv" */
 /* `include "uart_sequencer.sv" */
 /* `include "uart_scratch_seq.sv" */
-/* `include "uart_env.sv" */
+`include "uart_env.sv"
 
 endpackage: uart_tb_pkg
 

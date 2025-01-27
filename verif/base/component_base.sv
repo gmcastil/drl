@@ -1,7 +1,6 @@
 virtual class component_base;
 
     string name;
-
     component_base parent;
     typedef component_base children_t [$];
     children_t children;
@@ -25,19 +24,19 @@ virtual class component_base;
      */
 
     virtual task build_phase();
-        $display("[%s] build_phase called", name);
+        log(LOG_DEBUG, "Component base build phase");
     endtask: build_phase
 
     virtual task connect_phase();
-        $display("[%s] connect_phase called", name);
+        log(LOG_DEBUG, "Component base connect phase");
     endtask: connect_phase
 
     virtual task run_phase();
-        $display("[%s] run_phase called", name);
+        log(LOG_DEBUG, "Component base run phase");
     endtask: run_phase
 
     virtual task final_phase();
-        $display("[%s] final_phase called", name);
+        log(LOG_DEBUG, "Component base final phase");
     endtask: final_phase
 
     /* 
@@ -62,7 +61,7 @@ virtual class component_base;
         end
     endtask: print_hierarchy
 
-    function string get_name();
+    virtual function string get_name();
         return this.name;
     endfunction: get_name
 
