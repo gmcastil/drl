@@ -2,6 +2,7 @@ package base_pkg;
 
     import common_pkg::*;
 
+`include "logger.sv"
 `include "component_base.sv"
 class sequence_base extends component_base;
 endclass: sequence_base

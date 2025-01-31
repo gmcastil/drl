@@ -74,28 +74,10 @@ virtual class component_base;
         end
     endtask: final_phase
 
-    function void set_log_level(log_level_t level);
-        this.current_log_level = level;
-    endfunction: set_log_level
-
-    function log_level_t get_log_level();
-        return this.current_log_level;
-    endfunction: get_log_level
-
+    // Use the static logger class for logging
     function void log(log_level_t level, string msg, string id = "");
-        string level_name; 
-        string msg_fmt;
         if (level >= this.current_log_level) begin
-            // UVM like log messages, with optional ID field
-            if (id == "") begin
-                msg_fmt = "%s @ %0t: (%s) %s";
-            end else begin
-                msg_fmt = "%s @ %0t: (%s) [%s] %s";
-            end
-            level_name = level.name();
-            $display(msg_fmt,
-                        level_name.substr(4, level_name.len()-1),
-                        $time, this.get_full_hierarchical_name(), id, msg);
+            logger::log(level, this.get_full_hierarchical_name(), msg, id);
         end
     endfunction: log
 
