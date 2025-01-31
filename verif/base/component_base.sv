@@ -1,13 +1,10 @@
-virtual class component_base;
+virtual class component_base extends object_base;
 
-    string name;
     component_base parent;
     component_base children [string];
 
-    log_level_t current_log_level = default_log_level;
-
     function new(string name = "component_base", component_base parent = null);
-        this.name = name;
+        super.new(name);
         this.parent = parent;
         if (parent != null) begin
             parent.add_child(this);
@@ -32,10 +29,6 @@ virtual class component_base;
         end
     endtask: print_hierarchy
 
-    virtual function string get_name();
-        return this.name;
-    endfunction: get_name
-
     function string get_full_hierarchical_name();
         if (this.parent != null) begin
             return {this.parent.get_full_hierarchical_name(), ".", this.name};
@@ -51,31 +44,32 @@ virtual class component_base;
      */
 
     virtual task build_phase();
+        log(LOG_DEBUG, "Started component_base build phase", "BUILD");
         foreach (this.children[i]) begin
             this.children[i].build_phase();
         end
     endtask: build_phase
 
     virtual task connect_phase();
+        log(LOG_DEBUG, "Started component_base connect phase", "CONNECT");
         foreach (this.children[i]) begin
             this.children[i].connect_phase();
         end
     endtask: connect_phase
 
     virtual task run_phase();
-        foreach (this.children[i]) begin
-            this.children[i].run_phase();
-        end
+        log(LOG_DEBUG, "Started component_base run phase", "RUN");
     endtask: run_phase
 
     virtual task final_phase();
+        log(LOG_DEBUG, "Started component_base final phase", "FINAL");
         foreach (this.children[i]) begin
             this.children[i].final_phase();
         end
     endtask: final_phase
 
-    // Use the static logger class for logging
-    function void log(log_level_t level, string msg, string id = "");
+    // Override the log() method with one that lets us provide a hieracrhy
+    virtual function void log(log_level_t level, string msg, string id = "");
         if (level >= this.current_log_level) begin
             logger::log(level, this.get_full_hierarchical_name(), msg, id);
         end

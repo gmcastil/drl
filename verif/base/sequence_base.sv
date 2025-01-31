@@ -1,12 +1,14 @@
-virtual class transaction_base extends object_base;
+virtual class sequence_base extends object_base;
 
     time timestamp;
 
     function new(string name);
         super.new(name);
         this.timestamp = $time;
-    endfunction: new
+    endfunction;
+
+    pure virtual task run_sequence();
 
     /* pure virtual function void display(); */
 
-endclass: transaction_base
+endclass: sequence_base
