@@ -1,11 +1,9 @@
 virtual class sequencer_base extends component_base;
 
-    semaphore txn_queue_sem;
-    protected mailbox #(transaction_base) txn_queue;
+    protected sequence_base seq_queue [$];
 
     function new(string name = "sequencer_base", component_base parent = null);
         super.new(name, parent);
-        this.txn_queue_sem = new(1);
     endfunction: new
 
     virtual task build_phase();
@@ -17,50 +15,25 @@ virtual class sequencer_base extends component_base;
     endtask: connect_phase
 
     virtual task run_phase();
-        super.run_phase();
+        sequence_base seq;
+        forever begin
+            // Block until there is a sequence in the queue, then run it
+            wait (this.seq_queue.size() != 0);
+            seq = this.seq_queue.pop_front();
+            seq.start(this);
+            seq.body();
+        end
     endtask: run_phase
 
     virtual task final_phase();
         super.final_phase();
     endtask: final_phase
 
-    task add_transaction(transaction_base txn);
-        this.txn_queue_sem.get();
-        if (this.txn_queue == null) begin
-            log(LOG_WARN, "Sequencer queue is uninitialized");
-        end else begin
-            this.txn_queue.put(txn);
+    virtual function void add_sequence(sequence_base seq);
+        if (seq != null) begin
+            this.seq_queue.push_back(seq);
         end
-        this.txn_queue_sem.put();
-    endtask: add_transaction
-
-    task get_next_transaction(ref transaction_base txn);
-        this.txn_queue_sem.get();
-        if (this.txn_queue == null) begin
-            log(LOG_WARN, "Sequencer queue is uninitialized");
-        end else begin
-            this.txn_queue.get(txn);
-        end
-        this.txn_queue_sem.put();
-    endtask: get_next_transaction
-
-    // Potential for race condition here, so be mindful and make a task
-    // in the future if access needs to be atomic
-    function automatic bit is_empty();
-        bit retval;
-
-        if (this.txn_queue == null) begin
-            log(LOG_WARN, "Sequencer queue is uninitialized");
-        end 
-
-        if (this.txn_queue.num() == 0) begin
-            retval = 0;
-        end else begin
-            retval = 1;
-        end
-        return retval;
-
-    endfunction: is_empty
+    endfunction: add_sequence
 
 endclass: sequencer_base
 

@@ -17,6 +17,13 @@ class axi4l_driver #(parameter int AXI_ADDR_WIDTH, parameter int AXI_DATA_WIDTH)
         end
     endfunction: new
 
+    task run_phase();
+        super.run_phase();
+        log(LOG_INFO, "Driver run phase");
+        forever begin
+        end
+    endtask: run_phase
+
     function void set_mailbox(mailbox #(axi4l_transaction #(AXI_ADDR_WIDTH, AXI_DATA_WIDTH)) mbox);
         if (mbox == null) begin
             log(LOG_ERROR, "Cannot set driver mailbox. Null pointer received.");
