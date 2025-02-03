@@ -7,6 +7,6 @@ virtual class transaction_base extends object_base;
         this.timestamp = $time;
     endfunction: new
 
-    /* pure virtual function void display(); */
+    pure virtual function void display();
 
 endclass: transaction_base
