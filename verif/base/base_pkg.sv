@@ -15,6 +15,7 @@ package base_pkg;
 `include "component_base.sv"
 `include "config_db.sv"
 `include "transaction_base.sv"
+`include "host_guest_channel.sv"
 `include "sequencer_base.sv"
 `include "sequence_base.sv"
 `include "driver_base.sv"
