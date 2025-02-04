@@ -20,7 +20,7 @@ virtual class driver_base extends component_base;
         super.final_phase();
     endtask: final_phase
 
-    pure virtual task process_transaction(transaction_base txn);
+    pure virtual task process_transaction(ref transaction_base txn);
 
 endclass: driver_base
 
