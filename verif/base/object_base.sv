@@ -12,12 +12,12 @@ virtual class object_base;
         return this.name;
     endfunction: get_name
 
-    function void set_log_level(log_level_t level);
+    virtual function void set_log_level(log_level_t level);
         this.current_log_level = level;
     endfunction: set_log_level
 
     function log_level_t get_log_level();
-        return current_log_level;
+        return this.current_log_level;
     endfunction: get_log_level
 
     // Use the static logger class for logging with just the name of the object
