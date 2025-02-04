@@ -20,6 +20,10 @@ virtual class sequencer_base extends component_base;
             // Block until there is a sequence in the queue, then run it
             wait (this.seq_queue.size() != 0);
             seq = this.seq_queue.pop_front();
+            if (seq == null) begin
+                log(LOG_FATAL, "Received null sequence", "WTF");
+                $fatal(1);
+            end
             seq.start(this);
             seq.body();
         end
@@ -34,6 +38,10 @@ virtual class sequencer_base extends component_base;
             this.seq_queue.push_back(seq);
         end
     endfunction: add_sequence
+
+    pure virtual task add_transaction(transaction_base txn);
+
+    pure virtual task get_response(ref transaction_base txn);
 
 endclass: sequencer_base
 
