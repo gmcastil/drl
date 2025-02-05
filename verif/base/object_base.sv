@@ -20,12 +20,27 @@ virtual class object_base;
         return this.current_log_level;
     endfunction: get_log_level
 
-    // Use the static logger class for logging with just the name of the object
-    virtual function void log(log_level_t level, string msg, string id = "");
-        if (level >= this.current_log_level) begin
-            logger::log(level, this.get_name(), msg, id);
-        end
+    // Define a generic logging method - the intent is that each class would define its
+    // own version of this and then call the base class
+    function void log(log_level_t level, string name, string msg, string id = "");
+        logger::log(level, name, msg, id);
     endfunction: log
+
+    // Logs a fatal message with optional ID and then exits the simulation at that point
+    function void log_fatal(string name, string msg, string id = "");
+        logger::log(LOG_FATAL, name, msg, id);
+        // The $stacktrace task (can also be called as a function) was only added to the language in
+        // 2023 but has been implemented by Questa since at least 2013. To try to maintain some sort of
+        // compatibility, this can be turned off at runtime
+`ifndef NO_STACKTRACE_SUPPORT
+        $stacktrace;
+`endif
+        $fflush();
+        $fatal(1);
+    endfunction: log_fatal
+    
+// Save this for modifying logging later: mayb eiwh __FIULE__ and __LINE =
+// $fatal(1, $sformatf("Simulation terminated: [ID: %0d] %s at %m", id, message));
 
 endclass: object_base
 

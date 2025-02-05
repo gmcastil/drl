@@ -21,8 +21,7 @@ virtual class sequencer_base extends component_base;
             wait (this.seq_queue.size() != 0);
             seq = this.seq_queue.pop_front();
             if (seq == null) begin
-                log(LOG_FATAL, "Received null sequence", "WTF");
-                $fatal(1);
+                log_fatal("Received null sequence");
             end
             seq.start(this);
             seq.body();

@@ -68,6 +68,7 @@ virtual class component_base extends object_base;
         end
     endtask: final_phase
 
+    // Override this so we can set the log levels of our children
     virtual function void set_log_level(log_level_t level);
         this.current_log_level = level;
         foreach (this.children[i]) begin
@@ -77,18 +78,16 @@ virtual class component_base extends object_base;
         end
     endfunction: set_log_level
 
-    // Override the log() method with one that lets us provide a hieracrhy
+    // Override the log() and log_fatal() methods so we can provide hierarchy
     virtual function void log(log_level_t level, string msg, string id = "");
         if (level >= this.current_log_level) begin
-            logger::log(level, this.get_full_hierarchical_name(), msg, id);
-            $fflush();
+            super.log(level, this.get_full_hierarchical_name(), msg, id);
         end
     endfunction: log
 
-    // virtual function void log_fatal(string msg, string id = "");
-    //     logger::log(LOG_FATAL, this.get_full_hierarchical_name(), msg, id);
-    //     $
-    // endfunction: log_fatal
+    function void log_fatal(string msg, string id = "");
+        super.log_fatal(this.get_full_hierarchical_name(), msg, id);
+    endfunction: log_fatal
 
 endclass: component_base
 

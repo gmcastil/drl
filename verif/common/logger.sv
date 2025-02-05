@@ -33,7 +33,3 @@ class logger;
     endfunction: log
 
 endclass: logger
-
-
-// Save this for modifying logging later: mayb eiwh __FIULE__ and __LINE =
-// $fatal(1, $sformatf("Simulation terminated: [ID: %0d] %s at %m", id, message));

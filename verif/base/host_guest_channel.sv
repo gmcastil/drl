@@ -17,12 +17,10 @@ class host_guest_channel #(type T) extends component_base;
         this.guest_name = guest_name;
 
         if (this.host_to_guest == null) begin
-            log(LOG_FATAL, $sformatf("Could not initialize %s -> %s channel", host_name, guest_name));
-            $fatal(1);
+            log_fatal($sformatf("Could not initialize %s -> %s channel", host_name, guest_name));
         end
         if (this.guest_to_host == null) begin
-            log(LOG_ERROR, $sformatf("Could not initialize %s <- %s channel", host_name, guest_name));
-            $fatal(1);
+            log_fatal($sformatf("Could not initialize %s <- %s channel", host_name, guest_name));
         end
 
         else begin
@@ -33,8 +31,7 @@ class host_guest_channel #(type T) extends component_base;
 
     task send_to_guest(T txn);
         if (txn == null) begin
-            log(LOG_FATAL, "Attempted to send or receive a null transaction");
-            $fatal(1);
+            log_fatal("Attempted to send or receive a null transaction");
         end
         this.host_to_guest.put(txn);
         log(LOG_DEBUG, $sformatf("Type: %s Host: %s -> Guest: %s Txn Type: %s",
@@ -43,8 +40,7 @@ class host_guest_channel #(type T) extends component_base;
 
     task send_to_host(T txn);
         if (txn == null) begin
-            log(LOG_FATAL, "Attempted to send or receive a null transaction");
-            $fatal(1);
+            log_fatal("Attempted to send or receive a null transaction");
         end
         this.guest_to_host.put(txn);
         log(LOG_DEBUG, $sformatf("Type: %s Host: %s <- Guest: %s Txn Type: %s",
