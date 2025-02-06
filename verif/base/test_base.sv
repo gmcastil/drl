@@ -1,8 +1,5 @@
 virtual class test_base extends component_base;
 
-    // Signals test case completion
-    event test_done;
-
     function new(string name = "test_base", component_base parent = null);
         super.new(name, parent);
     endfunction: new

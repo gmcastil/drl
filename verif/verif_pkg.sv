@@ -1,3 +1,5 @@
+`include "macros.svh"
+
 package verif_pkg;
 
     // Forward declarations --- {{{
@@ -10,7 +12,6 @@ package verif_pkg;
 
     // Static classes, typedefs, global values, macros
 `include "logger.sv"
-`include "macros.svh"
 
     // Base components
 `include "object_base.sv"

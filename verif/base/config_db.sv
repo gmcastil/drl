@@ -3,10 +3,11 @@ class config_db;
     static string name = "config_db";
     static log_level_t current_log_level = default_log_level;
 
-    // The configuration database only stores references to this type
-    static component_base store [string];
+    // The configuration database can store component references as well as sequences,
+    // transactions, and anything else that derives from this lowest base class
+    static object_base store [string];
 
-    static function bit set(string scope, string key, component_base value);
+    static function bit set(string scope, string key, object_base value);
         automatic string full_key;
         full_key = {scope, ".", key};
         if (store.exists(full_key)) begin
@@ -19,7 +20,7 @@ class config_db;
         end
     endfunction: set
 
-    static function bit get(string scope, string key, ref component_base value);
+    static function bit get(string scope, string key, ref object_base value);
         automatic string full_key;
         full_key = {scope, ".", key};
         if (store.exists(full_key)) begin

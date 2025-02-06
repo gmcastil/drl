@@ -8,7 +8,7 @@ virtual class sequence_base extends object_base;
         this.timestamp = $time;
     endfunction;
 
-    pure virtual function void start(sequencer_base seqr);
+    pure virtual task start(sequencer_base seqr);
 
     pure virtual task body();
 

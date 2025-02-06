@@ -31,7 +31,7 @@ virtual class object_base;
         logger::log(LOG_FATAL, name, msg, id);
         // The $stacktrace task (can also be called as a function) was only added to the language in
         // 2023 but has been implemented by Questa since at least 2013. To try to maintain some sort of
-        // compatibility, this can be turned off at runtime
+        // compatibility, this can be turned off at runtime if needed
 `ifndef NO_STACKTRACE_SUPPORT
         $stacktrace;
 `endif
@@ -39,8 +39,5 @@ virtual class object_base;
         $fatal(1);
     endfunction: log_fatal
     
-// Save this for modifying logging later: mayb eiwh __FIULE__ and __LINE =
-// $fatal(1, $sformatf("Simulation terminated: [ID: %0d] %s at %m", id, message));
-
 endclass: object_base
 
