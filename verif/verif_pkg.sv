@@ -1,5 +1,3 @@
-`include "macros.svh"
-
 package verif_pkg;
 
     // Forward declarations --- {{{

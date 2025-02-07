@@ -8,24 +8,30 @@ class config_db;
     static object_base store [string];
 
     static function bit set(string scope, string key, object_base value);
-        automatic string full_key;
+        string msg;
+        string full_key;
+
         full_key = {scope, ".", key};
         if (store.exists(full_key)) begin
                 log(LOG_ERROR, $sformatf("Key '%s' was already found in configuration database", full_key));
             return 0;
         end else begin
             store[full_key] = value;
-            log(LOG_DEBUG, $sformatf("Added key '%s' with value: %p", full_key, value), "SET_KEY");
+            msg = $sformatf("Registered %s in configuration database with key %s", value.get_name(), full_key);
+            log(LOG_DEBUG, msg, "SET");
             return 1;
         end
     endfunction: set
 
     static function bit get(string scope, string key, ref object_base value);
-        automatic string full_key;
+        string msg;
+        string full_key;
+
         full_key = {scope, ".", key};
         if (store.exists(full_key)) begin
             value = store[full_key];
-            log(LOG_DEBUG, $sformatf("Found key '%s' with value: %p", full_key, value), "GET_KEY");
+            msg = $sformatf("Retrieved %s from configuration database with key %s", value.get_name(), full_key);
+            log(LOG_DEBUG, msg, "GET");
             return 1;
         end else begin
             log(LOG_WARN, $sformatf("Key '%s' not found in configuration database", full_key));
@@ -34,11 +40,16 @@ class config_db;
     endfunction: get
 
     static function bit remove(string scope, string key);
-        automatic string full_key;
+        string msg;
+        string full_key;
+        object_base value;
+
         full_key = {scope, ".", key};
         if (store.exists(full_key)) begin
+            value = store[full_key];
+            msg = $sformatf("Deleted %s from configuration database with key %s", value.get_name(), full_key);
             store.delete(full_key);
-            log(LOG_DEBUG, $sformatf("Removed key '%s' found configuration database", full_key), "DEL_KEY");
+            log(LOG_DEBUG, msg, "DEL");
             return 1;
         end else begin
             log(LOG_WARN, $sformatf("Key '%s' not found in configuration database", full_key));

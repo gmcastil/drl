@@ -44,25 +44,25 @@ virtual class component_base extends object_base;
      */
 
     virtual task build_phase();
-        log(LOG_DEBUG, "Started component_base build phase", "BUILD");
+        log_debug("Started component_base build phase", "SUPER");
         foreach (this.children[i]) begin
             this.children[i].build_phase();
         end
     endtask: build_phase
 
     virtual task connect_phase();
-        log(LOG_DEBUG, "Started component_base connect phase", "CONNECT");
+        log_debug("Started component_base connect phase", "SUPER");
         foreach (this.children[i]) begin
             this.children[i].connect_phase();
         end
     endtask: connect_phase
 
     virtual task run_phase();
-        log(LOG_DEBUG, "Started component_base run phase", "RUN");
+        log_debug("Started component_base run phase", "SUPER");
     endtask: run_phase
 
     virtual task final_phase();
-        log(LOG_DEBUG, "Started component_base final phase", "FINAL");
+        log_debug("Started component_base final phase", "SUPER");
         foreach (this.children[i]) begin
             this.children[i].final_phase();
         end
@@ -70,16 +70,16 @@ virtual class component_base extends object_base;
 
     // Override this so we can set the log levels of our children
     virtual function void set_log_level(log_level_t level);
+        log_info($sformatf("Setting log level to %s for %s",
+            level.name(), this.get_full_hierarchical_name()));
         this.current_log_level = level;
         foreach (this.children[i]) begin
             this.children[i].set_log_level(level);
-            log(LOG_INFO, $sformatf("Setting log level to %s for %s",
-                level.name(), this.children[i].get_full_hierarchical_name()));
         end
     endfunction: set_log_level
 
     // Override the log() and log_fatal() methods so we can provide hierarchy
-    virtual function void log(log_level_t level, string msg, string id = "");
+    function void log(log_level_t level, string msg, string id = "");
         if (level >= this.current_log_level) begin
             super.log(level, this.get_full_hierarchical_name(), msg, id);
         end
@@ -88,6 +88,30 @@ virtual class component_base extends object_base;
     function void log_fatal(string msg, string id = "");
         super.log_fatal(this.get_full_hierarchical_name(), msg, id);
     endfunction: log_fatal
+
+    function void log_info(string msg, string id = "");
+        if (LOG_INFO >= this.current_log_level) begin
+            logger::log(LOG_INFO, this.get_full_hierarchical_name(), msg, id);
+        end
+    endfunction: log_info
+    
+    function void log_warn(string msg, string id = "");
+        if (LOG_WARN >= this.current_log_level) begin
+            logger::log(LOG_WARN, this.get_full_hierarchical_name(), msg, id);
+        end
+    endfunction: log_warn
+
+    function void log_debug(string msg, string id = "");
+        if (LOG_DEBUG >= this.current_log_level) begin
+            logger::log(LOG_DEBUG, this.get_full_hierarchical_name(), msg, id);
+        end
+    endfunction: log_debug
+
+    function void log_error(string msg, string id = "");
+        if (LOG_ERROR >= this.current_log_level) begin
+            logger::log(LOG_ERROR, this.get_full_hierarchical_name(), msg, id);
+        end
+    endfunction: log_error
 
 endclass: component_base
 

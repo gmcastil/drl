@@ -1,4 +1,4 @@
-virtual class object_base;
+class object_base;
 
     string name;
 
@@ -12,7 +12,7 @@ virtual class object_base;
         return this.name;
     endfunction: get_name
 
-    virtual function void set_log_level(log_level_t level);
+    function void set_log_level(log_level_t level);
         this.current_log_level = level;
     endfunction: set_log_level
 
@@ -38,6 +38,6 @@ virtual class object_base;
         $fflush();
         $fatal(1);
     endfunction: log_fatal
-    
+
 endclass: object_base
 

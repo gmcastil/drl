@@ -1,46 +1,66 @@
 virtual class sequencer_base extends component_base;
 
-    protected sequence_base seq_queue [$];
+    protected int txn_count;
 
     function new(string name = "sequencer_base", component_base parent = null);
         super.new(name, parent);
     endfunction: new
 
-    virtual task build_phase();
+    task build_phase();
         super.build_phase();
+        this.txn_count = 0;
     endtask: build_phase
 
-    virtual task connect_phase();
+    task connect_phase();
         super.connect_phase();
     endtask: connect_phase
 
-    virtual task run_phase();
-        sequence_base seq;
-        forever begin
-            // Block until there is a sequence in the queue, then run it
-            wait (this.seq_queue.size() != 0);
-            seq = this.seq_queue.pop_front();
-            if (seq == null) begin
-                log_fatal("Received null sequence");
-            end
-            seq.start(this);
-            seq.body();
-        end
+    task run_phase();
+        super.run_phase(); 
     endtask: run_phase
 
-    virtual task final_phase();
+    task final_phase();
         super.final_phase();
     endtask: final_phase
 
-    virtual function void add_sequence(sequence_base seq);
-        if (seq != null) begin
-            this.seq_queue.push_back(seq);
+    // Adds a sequence to the internal sequence queue for processing into transactions
+    task add_sequence(sequence_base seq);
+        // if (seq == null) begin
+        //     log_fatal("Cannot add null sequence");
+        // end else begin
+        //     this.seq_queue.push_back(seq);
+        //     log_debug($sformatf("Added sequence to sequencer queue. Queue size is %0d", this.seq_queue.size()));
+        // end
+    endtask: add_sequence
+
+    // Derived sequencers implement their own transaction handling, and the base class handles
+    // transaction counting and tracking
+    task add_transaction(ref transaction_base txn);
+        this.txn_count++;
+        log_debug($sformatf("Transaction added. Transaction pending count = %0d", this.txn_count));
+    endtask: add_transaction
+
+    // Derived sequencers implement their own response handling (if any)
+    task get_response(ref transaction_base txn);
+        log_fatal("Derived classes need to extend this themselves");
+    endtask: get_response
+
+    // Environments should call this to determine how many pending transactions there are
+    function int get_transaction_count();
+        return this.txn_count;
+    endfunction: get_transaction_count
+
+    // Drivers should call this function when a transaction has been completed
+    function bit transaction_completed();
+        if (this.txn_count == 0) begin
+            log_error("Tried to decrement transaction counter that is zero");
+            return 0;
+        end else begin
+            this.txn_count--;
+            log_debug($sformatf("Transaction completed. Transaction pending count = %0d", this.txn_count));
+            return 1;
         end
-    endfunction: add_sequence
-
-    pure virtual task add_transaction(transaction_base txn);
-
-    pure virtual task get_response(ref transaction_base txn);
+    endfunction: transaction_completed
 
 endclass: sequencer_base
 
