@@ -1,7 +1,7 @@
 class objection_mgr;
 
     static string name = "objection_mgr";
-    static log_level_t current_log_level = default_Log_level;
+    static log_level_t current_log_level = default_log_level;
 
     // Access to the counter needs to be locked and accessible only through
     // the raising and dropping tasks.
