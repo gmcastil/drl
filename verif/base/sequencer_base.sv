@@ -1,7 +1,15 @@
 virtual class sequencer_base extends component_base;
 
+    // Internal transaction counter needs a lock to prevent race conditions otherwise
     protected int txn_count;
+    semaphore txn_count_sem;
+
+    // The sequence queue does not need to be locked because it is assumed that all sequences are
+    // queued up before the sequencer processes them
     protected sequence_base seq_queue [$];
+
+    // Indicates that the seqeuncer is busy processing a sequence into transactions
+    bit active;
 
     function new(string name = "sequencer_base", component_base parent = null);
         super.new(name, parent);
@@ -10,6 +18,8 @@ virtual class sequencer_base extends component_base;
     task build_phase();
         super.build_phase();
         this.txn_count = 0;
+        this.txn_count_sem = new(1);
+        this.active = 0;
     endtask: build_phase
 
     task connect_phase();
@@ -20,18 +30,38 @@ virtual class sequencer_base extends component_base;
     // popping them out, and calling their start methods.
     task run_phase();
         sequence_base seq;
+        // This objection gets dropped later at the end of the last transaction in the last sequence,
+        // when the seqeunce counter and transaction counters are both zero.
+        //
+        // Warning for developers: Test sequences must not rely on fixed time delays in test
+        // cases (i.e., outside of sequences). Doing so will almost certainly lead to the following
+        // - Timing violations affecting objects being raised or dropped
+        // - Simulations terminating early or hanging
+        // - Hard to find race conditions
+        //
+        // Instead, test cases should rely on 
+        // - Using sequences to generate all delays or transactions
+        // - Synchronization based on DUT events
+        // - Handshakes
+        //
+        // TL;DR Don't do things like `#100ns` in your test cases. It would be bad.
+        //
+        objection_mgr::raise(this.get_full_hierarchical_name());
         forever begin
             // Block until there is a sequence in the queue, then run it
             log_debug("Waiting to receive sequence");
             wait (this.seq_queue.size() != 0);
+
             log_debug("Sequencer queue is non-zero");
             seq = this.seq_queue.pop_front();
             if (seq == null) begin
                 log_fatal("Received null sequence");
-            end else begin
-                log_debug("Received sequence");
             end
+
+            log_debug("Received sequence");
+            this.active = 1;
             seq.start();
+            this.active = 0;
         end
     endtask: run_phase
 
@@ -52,7 +82,9 @@ virtual class sequencer_base extends component_base;
     // Derived sequencers implement their own transaction handling, and the base class handles
     // transaction counting and tracking
     task add_transaction(ref transaction_base txn);
+        this.txn_count_sem.get();
         this.txn_count++;
+        this.txn_count_sem.put();
         log_debug($sformatf("Transaction added. Transaction pending count = %0d", this.txn_count));
     endtask: add_transaction
 
@@ -66,18 +98,31 @@ virtual class sequencer_base extends component_base;
         return this.txn_count;
     endfunction: get_transaction_count
 
-    // Drivers should call this function when a transaction has been completed
-    function bit transaction_completed();
-        // If this occurs, it indicates a driver and sequencer that are out of sync
+    // Drivers must call this function when a transaction has been completed
+    task transaction_completed();
+        this.txn_count_sem.get();
+
+        // This would indicate a driver and sequencer that were out of sync or some other logic error
+        // that should never occur
         if (this.txn_count == 0) begin
-            log_error("Tried to decrement transaction counter that is zero");
-            return 0;
-        end else begin
-            this.txn_count--;
-            log_debug($sformatf("Transaction completed. Transaction pending count = %0d", this.txn_count));
-            return 1;
+            this.txn_count_sem.put();
+            log_fatal("Driver attempted to complete a transaction when no transactions were pending.");
         end
-    endfunction: transaction_completed
+
+        // Safe to decrement this now
+        this.txn_count--;
+        log_debug($sformatf("Transaction completed. Transaction pending count = %0d", this.txn_count));
+
+        // While we're still locked, check the number of pending transactions and seqeunces as well
+        // as whether we're actively processing a sequence to see if we can drop our objection.
+        // Woe to thee that adds sequences after time has started.
+        if (this.txn_count == 0 && this.seq_queue.size() == 0 && this.active == 0) begin
+            log_debug("All sequences and transactions are completed");
+            objection_mgr::drop(this.get_full_hierarchical_name());
+        end
+        this.txn_count_sem.put();
+
+    endtask: transaction_completed
 
 endclass: sequencer_base
 
