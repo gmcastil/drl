@@ -1,61 +1,48 @@
-class objection_mgr;
+class objection_mgr extends object_base;
 
-    static string name = "objection_mgr";
-    static log_level_t current_log_level = default_log_level;
+    string name = "objection_mgr";
 
     // Access to the counter needs to be locked and accessible only through
     // the raising and dropping tasks.
-    static semaphore objection_sem = new(1);
+    protected semaphore objection_sem = new(1);
     protected static int objection_cnt = 0;
 
-    static event test_done;
+    event test_done;
 
-    static task raise(string source);
-        objection_sem.get();
-        log(LOG_DEBUG, $sformatf("Unlocked objection manager for %s", source));
+    function new(string name = name);
+        super.new(name);
+    endfunction: new
 
-        objection_cnt++;
-        log(LOG_DEBUG, $sformatf("Objection raised by %s. Current objections = %0d",
+    task raise(string source);
+        this.objection_sem.get();
+        log_debug($sformatf("Unlocked objection manager for %s", source));
+
+        this.objection_cnt++;
+        log_debug($sformatf("Objection raised by %s. Current objections = %0d",
                     source, objection_cnt));
 
-        objection_sem.put();
-        log(LOG_DEBUG, $sformatf("Locked objection manager for %s", source));
+        this.objection_sem.put();
+        log_debug($sformatf("Locked objection manager for %s", source));
     endtask: raise
 
-    static task drop(string source);
-        objection_sem.get();
-        log(LOG_DEBUG, $sformatf("Unlocked objection manager for %s", source));
-        if (objection_cnt == 0) begin
-            // FIXME to use log_fatal() instead
-            log(LOG_FATAL, $sformatf("Attempt by %s to drop objection failed", source));
-            $fatal(1);
+    task drop(string source);
+        this.objection_sem.get();
+        log_debug($sformatf("Unlocked objection manager for %s", source));
+        if (this.objection_cnt == 0) begin
+            log_fatal($sformatf("Attempt by %s to drop objection failed", source));
         end
 
-        objection_cnt--;
-        log(LOG_DEBUG, $sformatf("Objection dropped by %s. Current objections = %0d",
+        this.objection_cnt--;
+        log_debug($sformatf("Objection dropped by %s. Current objections = %0d",
                     source, objection_cnt));
-        objection_sem.put();
-        log(LOG_DEBUG, $sformatf("Locked objection manager for %s", source));
+        this.objection_sem.put();
+        log_debug($sformatf("Locked objection manager for %s", source));
 
-        if (objection_cnt == 0) begin
-            log(LOG_INFO, "All objections dropped. Ending the test");
+        if (this.objection_cnt == 0) begin
+            log_info("All objections dropped. Ending the test");
             ->test_done;
         end
     endtask: drop
-
-    static function void set_log_level(log_level_t level);
-        current_log_level = level;
-    endfunction: set_log_level
-
-    static function log_level_t get_log_level();
-        return current_log_level;
-    endfunction: get_log_level
-
-    static function void log(log_level_t level, string msg, string id = "");
-        if (level >= current_log_level) begin
-            logger::log(level, name, msg, id);
-        end
-    endfunction: log
 
 endclass
 
