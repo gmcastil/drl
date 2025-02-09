@@ -1,5 +1,11 @@
 virtual class sequencer_base extends component_base;
 
+    // Sequencers all generally need access to the configuration database
+    config_db cfg_db;
+    // The base sequencer handles the objection management and derived sequencers are expected to
+    // set this appropriately during the connect_phase().
+    objection_mgr obj_mgr;
+
     // Internal transaction counter needs a lock to prevent race conditions otherwise
     protected int txn_count;
     semaphore txn_count_sem;
@@ -11,8 +17,10 @@ virtual class sequencer_base extends component_base;
     // Indicates that the seqeuncer is busy processing a sequence into transactions
     bit active;
 
-    function new(string name = "sequencer_base", component_base parent = null);
+    function new(string name, component_base parent, config_db cfg_db);
         super.new(name, parent);
+        this.cfg_db = cfg_db;
+        this.obj_mgr = null;
     endfunction: new
 
     task build_phase();
@@ -46,7 +54,11 @@ virtual class sequencer_base extends component_base;
         //
         // TL;DR Don't do things like `#100ns` in your test cases. It would be bad.
         //
-        objection_mgr::raise(this.get_full_hierarchical_name());
+        if (this.obj_mgr == null) begin
+            log_fatal("Derived sequencer did not set the objection manager during connect_phase()");
+        end
+
+        this.obj_mgr.raise(this);
         forever begin
             // Block until there is a sequence in the queue, then run it
             log_debug("Waiting to receive sequence");
@@ -118,7 +130,7 @@ virtual class sequencer_base extends component_base;
         // Woe to thee that adds sequences after time has started.
         if (this.txn_count == 0 && this.seq_queue.size() == 0 && this.active == 0) begin
             log_debug("All sequences and transactions are completed");
-            objection_mgr::drop(this.get_full_hierarchical_name());
+            this.obj_mgr.drop(this);
         end
         this.txn_count_sem.put();
 

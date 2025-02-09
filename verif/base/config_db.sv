@@ -1,10 +1,18 @@
-class config_db extends object_base
-
-    string name = "config_db";
+class config_db extends object_base;
 
     // The configuration database can store component references as well as sequences,
     // transactions, and anything else that derives from this lowest base class
     object_base store [string];
+
+    /* NOTE For now, use * as the scope when setting and retrieving keys for wildcards. In the
+     * future refactor this to actually use wildcards so that items can be stored with the scope
+     * '*' and then retrieved with whatever scope is desired.  For example, set("*", foo, bar) and
+     * then retrieved with get("baz", foo, blar).  As is, you have to retrieve it with * as the
+     * scope.
+     */
+    function new(string name);
+        super.new(name);
+    endfunction: new
 
     function bit set(string scope, string key, object_base value);
         string msg;

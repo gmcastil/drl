@@ -10,11 +10,11 @@ package verif_pkg;
 
     // Static classes, typedefs, global values, macros
 `include "logger.sv"
-`include "objection_mgr.sv"
 
     // Base components
 `include "object_base.sv"
 `include "component_base.sv"
+`include "objection_mgr.sv"
 `include "config_db.sv"
 `include "transaction_base.sv"
 `include "host_guest_channel.sv"

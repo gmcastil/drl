@@ -12,6 +12,12 @@ class object_base;
         return this.name;
     endfunction: get_name
 
+    // Derived classes are expected to override this if they wish to support hierarchical references
+    // (e.g., the component_base class)
+    function string get_full_hierarchical_name();
+        return this.get_name();
+    endfunction: get_full_hierarchical_name
+
     function void set_log_level(log_level_t level);
         this.current_log_level = level;
     endfunction: set_log_level
@@ -29,12 +35,8 @@ class object_base;
             return;
         end
 
-        // If derived classes implement hierarchies, log with that, otherwise use the base name
-        if ($cast(log_name, this.get_full_hierarchical_name())) begin
-            logger::log(level, log_name, msg, id);
-        end else begin
-            logger::log(level, this.get_name(), msg, id);
-        end
+        logger::log(level, this.get_full_hierarchical_name(), msg, id);
+
     endfunction: log
 
     function void log_info(string msg, string id = "");
@@ -44,6 +46,10 @@ class object_base;
     function void log_warn(string msg, string id = "");
         this.log(LOG_WARN, msg, id);
     endfunction: log_warn
+
+    function void log_debug(string msg, string id = "");
+        this.log(LOG_DEBUG, msg, id);
+    endfunction: log_debug
 
     function void log_error(string msg, string id = "");
         this.log(LOG_ERROR, msg, id);
