@@ -2,10 +2,11 @@ class object_base;
 
     string name;
 
-    log_level_t current_log_level = default_log_level;
+    log_level_t current_log_level;
 
     function new(string name);
         this.name = name;
+        this.current_log_level =  logger::get_default_log_level();
     endfunction: new
 
     function string get_name();
@@ -29,14 +30,10 @@ class object_base;
     // Define a generic logging method - the intent is that each class would define its
     // own version of this and then call the base class
     function void log(log_level_t level, string msg, string id = "");
-        string log_name;
-
         if (level < this.current_log_level) begin
             return;
         end
-
         logger::log(level, this.get_full_hierarchical_name(), msg, id);
-
     endfunction: log
 
     function void log_info(string msg, string id = "");

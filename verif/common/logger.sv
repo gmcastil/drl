@@ -13,6 +13,10 @@ log_level_t default_log_level = LOG_INFO;
 // Static class used for all logging activities
 class logger;
 
+    static function log_level_t get_default_log_level();
+        return default_log_level;
+    endfunction: get_default_log_level
+
     static function void log(log_level_t level, string component_name, string msg, string id);
         string level_name;
         string msg_fmt;
