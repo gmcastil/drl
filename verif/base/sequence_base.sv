@@ -9,9 +9,7 @@ virtual class sequence_base extends object_base;
 
     // This is made virtual because base sequencers need to be able to call this on derived
     // sequences
-    virtual task start();
-        log_fatal("Derived classes need to extend start() themselves");
-    endtask: start
+    pure virtual task start();
 
     task body();
         log_fatal("Derived classes need to extend body() themselves");

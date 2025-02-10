@@ -1,10 +1,10 @@
 // Define log levels used by testbench components
 typedef enum {
-    LOG_FATAL = 0,  // Critical issues that halt simulation
-    LOG_ERROR = 1,  // Errors requiring attention
-    LOG_WARN = 2,   // Alerts about potential issues
-    LOG_INFO = 3,   // General operational messages
-    LOG_DEBUG = 4   // Detailed debugging information
+    LOG_FATAL,  // Critical issues that halt simulation
+    LOG_ERROR,  // Errors requiring attention
+    LOG_WARN,   // Alerts about potential issues
+    LOG_INFO,   // General operational messages
+    LOG_DEBUG   // Detailed debugging information
 } log_level_t;
 
 // Default log level for new testbench components (can be overriden locally)

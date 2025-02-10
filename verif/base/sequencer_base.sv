@@ -70,9 +70,10 @@ virtual class sequencer_base extends component_base;
                 log_fatal("Received null sequence");
             end
 
-            log_debug("Received sequence");
             this.active = 1;
+            log_debug("Starting sequence");
             seq.start();
+            log_debug("Sequence complete");
             this.active = 0;
         end
     endtask: run_phase
