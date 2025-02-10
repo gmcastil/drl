@@ -15,7 +15,7 @@ class object_base;
 
     // Derived classes are expected to override this if they wish to support hierarchical references
     // (e.g., the component_base class)
-    function string get_full_hierarchical_name();
+    virtual function string get_full_hierarchical_name();
         return this.get_name();
     endfunction: get_full_hierarchical_name
 
