@@ -24,7 +24,7 @@ class host_guest_channel #(type T) extends component_base;
         end
 
         else begin
-            log(LOG_INFO, $sformatf("Created %s -> %s channel", this.host_name, this.guest_name));
+            log_info($sformatf("Created %s -> %s channel", this.host_name, this.guest_name));
         end
 
     endfunction: new
@@ -34,7 +34,7 @@ class host_guest_channel #(type T) extends component_base;
             log_fatal("Attempted to send or receive a null transaction");
         end
         this.host_to_guest.put(txn);
-        log(LOG_DEBUG, $sformatf("Type: %s Host: %s -> Guest: %s Txn Type: %s",
+        log_debug($sformatf("Type: %s Host: %s -> Guest: %s Txn Type: %s",
                 "SEND", this.host_name, this.guest_name, $typename(T)));
     endtask: send_to_guest
 
@@ -43,19 +43,19 @@ class host_guest_channel #(type T) extends component_base;
             log_fatal("Attempted to send or receive a null transaction");
         end
         this.guest_to_host.put(txn);
-        log(LOG_DEBUG, $sformatf("Type: %s Host: %s <- Guest: %s Txn Type: %s",
+        log_debug($sformatf("Type: %s Host: %s <- Guest: %s Txn Type: %s",
                 "SEND", this.host_name, this.guest_name, $typename(T)));
     endtask: send_to_host
 
     task recv_from_host(ref T txn);
         this.host_to_guest.get(txn);
-        log(LOG_DEBUG, $sformatf("Type: %s Host: %s -> Guest: %s Txn Type: %s",
+        log_debug($sformatf("Type: %s Host: %s -> Guest: %s Txn Type: %s",
                 "RECV", this.host_name, this.guest_name, $typename(T)));
     endtask: recv_from_host
 
     task recv_from_guest(ref T txn);
         this.guest_to_host.get(txn);
-        log(LOG_DEBUG, $sformatf("Type: %s Host: %s <- Guest: %s Txn Type: %s",
+        log_debug($sformatf("Type: %s Host: %s <- Guest: %s Txn Type: %s",
                 "RECV", this.host_name, this.guest_name, $typename(T)));
     endtask: recv_from_guest
 

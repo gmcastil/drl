@@ -49,7 +49,6 @@ virtual class component_base extends object_base;
     endtask: connect_phase
 
     virtual task run_phase();
-        log_fatal("Derived classes need to extend this themselves");
     endtask: run_phase
 
     virtual task final_phase();

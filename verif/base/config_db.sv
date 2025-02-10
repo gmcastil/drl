@@ -15,51 +15,45 @@ class config_db extends object_base;
     endfunction: new
 
     function bit set(string scope, string key, object_base value);
-        string msg;
         string full_key;
 
         full_key = {scope, ".", key};
         if (store.exists(full_key)) begin
-                log_error($sformatf("Key '%s' was already found in configuration database", full_key));
+            log_error($sformatf("Key '%s' was already found in configuration database", full_key));
             return 0;
         end else begin
             store[full_key] = value;
-            msg = $sformatf("Registered %s in configuration database with key %s", value.get_name(), full_key);
-            log_debug(msg, "SET");
+            log_debug($sformatf("Registered %s in configuration database with key %s", value.get_name(), full_key));
             return 1;
         end
     endfunction: set
 
     function bit get(string scope, string key, ref object_base value);
-        string msg;
         string full_key;
 
         full_key = {scope, ".", key};
         if (store.exists(full_key)) begin
             value = store[full_key];
-            msg = $sformatf("Retrieved %s from configuration database with key %s", value.get_name(), full_key);
-            log_debug(msg, "GET");
+            log_debug($sformatf("Retrieved %s from configuration database with key %s", value.get_name(), full_key));
             return 1;
         end else begin
-            log_warn($sformatf("Key '%s' not found in configuration database", full_key));
+            log_error($sformatf("Key '%s' not found in configuration database", full_key));
             return 0;
         end
     endfunction: get
 
     function bit remove(string scope, string key);
-        string msg;
         string full_key;
         object_base value;
 
         full_key = {scope, ".", key};
         if (store.exists(full_key)) begin
             value = store[full_key];
-            msg = $sformatf("Deleted %s from configuration database with key %s", value.get_name(), full_key);
             store.delete(full_key);
-            log_debug(msg, "DEL");
+            log_debug($sformatf("Deleted %s from configuration database with key %s", value.get_name(), full_key));
             return 1;
         end else begin
-            log(LOG_WARN, $sformatf("Key '%s' not found in configuration database", full_key));
+            log_error($sformatf("Key '%s' not found in configuration database", full_key));
             return 0;
         end
     endfunction: remove
