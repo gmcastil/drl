@@ -1,5 +1,29 @@
 #!/bin/bash
 
+show_help () {
+    printf 'Usage: ${0##*/} [-cv] [-t TESTCASE]\n'
+    printf '\n'
+    printf '    -g           GUI mode (defaults to console mode)\n'
+    printf '    -t TESTCASE  select a TESTCASE (defaults to \`uart_base_test\`)\n'
+    printf '    -v           verbose mode. Can be used multiple times for increased\n'
+    printf '                 verbosity.\n'
+}
+
+get_log_level () {
+    local level
+    case  "${1}" in
+        4) level="DEBUG" ;;
+        3) level="INFO"  ;;
+        2) level="WARN"  ;;
+        1) level="ERROR" ;;
+        0) level="FATAL" ;;
+        *) level="DEBUG" ;;
+    esac
+    printf '%s' "${level}" >&1
+    return
+}
+
+
 err () {
     local msg
     msg="${1}"
@@ -9,17 +33,39 @@ err () {
 source "../../tools.conf" >/dev/null 2>&1 || \
     { err "Could not import tool versions"; exit 1; }
 
-
 MODELSIM="$(readlink -f ./modelsim.ini)"
 export MODELSIM
 
-vsim -c \
+# Default to warnings only
+verbose=3
+# Default to console mode
+console_mode="-c"
+while getopts "gvt:" opt; do
+
+    case $opt in 
+        g)
+            console_mode=
+            ;;
+        v)
+            verbose=$((verbose+1))
+            ;;
+        *)
+            show_help >&2
+            exit 1
+            ;;
+    esac
+done
+shift "$((OPTIND-1))"
+log_level="$(get_log_level "${verbose}")"
+
+vsim "${console_mode}" \
     -voptargs=+acc \
+    -classdebug \
     -GDEVICE="7SERIES" \
     -GBASE_OFFSET=32\'h80000000 \
     -GBASE_OFFSET_MASK=32\'h00000FFF \
     -GRX_ENABLE='true' \
     -GTX_ENABLE='true' \
-    +LOG_LEVEL=INFO \
+    +LOG_LEVEL="${log_level}" \
     -do 'log -r \*; run -all; exit' -Ldir ../rundir work.top
 
