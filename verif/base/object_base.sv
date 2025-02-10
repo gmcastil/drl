@@ -30,7 +30,7 @@ class object_base;
     // Define a generic logging method - the intent is that each class would define its
     // own version of this and then call the base class
     function void log(log_level_t level, string msg, string id = "");
-        if (level < this.current_log_level) begin
+        if (level > this.current_log_level) begin
             return;
         end
         logger::log(level, this.get_full_hierarchical_name(), msg, id);
