@@ -1,0 +1,8 @@
+| **Log Level**   | **Purpose**                                                                                         | **Example Usage**                                                                                          |
+|----------------|-----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| **LOG_FATAL**   | Critical errors that **stop simulation** (via `$fatal()`).                                          | Null pointer dereference, invalid config settings, DUT initialization failure.                             |
+| **LOG_ERROR**   | Serious errors that **don’t require immediate termination** but indicate test failure.              | A failed register write, incorrect DUT output, or transaction timeouts.                                    |
+| **LOG_WARN**    | Warnings about **non-fatal issues** that could indicate potential problems or misconfigurations.    | Timing violations, unexpected inputs/outputs, or ignored transactions.                                     |
+| **LOG_INFO**    | General information about simulation flow, **minimal runtime logs** unless explicitly enabled.      | Phase start/end, major configuration settings, or summary information (e.g., test completion).             |
+| **LOG_DEBUG**   | Low-level details used **during development or troubleshooting.**                                   | Detailed step-by-step logs for BFMs, drivers, or transaction-level details that aren’t normally needed.    |
+
