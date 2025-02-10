@@ -54,7 +54,7 @@ class object_base;
 
     // Logs a fatal message with optional ID and then exits the simulation at that point
     function void log_fatal(string msg, string id = "");
-        this.log(LOG_FATAL, msg, id);
+        logger::log(LOG_FATAL, this.get_full_hierarchical_name(), msg, id);
         // The $stacktrace task (can also be called as a function) was only added to the language in
         // 2023 but has been implemented by Questa since at least 2013. To try to maintain some sort of
         // compatibility, this can be turned off at runtime if needed
