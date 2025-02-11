@@ -1,33 +1,51 @@
 virtual class sequencer_base extends component_base;
 
-    // Sequencers all generally need access to the configuration database
-    config_db cfg_db;
-    // The base sequencer handles the objection management and derived sequencers are expected to
-    // set this appropriately during the connect_phase().
-    objection_mgr obj_mgr;
+    // The base sequencer handles all objection management
+    protected objection_mgr p_obj_mgr;
 
     // Internal transaction counter needs a lock to prevent race conditions otherwise
     protected int txn_count;
-    semaphore txn_count_sem;
+    protected semaphore txn_count_sem;
 
     // The sequence queue does not need to be locked because it is assumed that all sequences are
     // queued up before the sequencer processes them
     protected sequence_base seq_queue [$];
 
     // Indicates that the seqeuncer is busy processing a sequence into transactions
-    bit active;
+    protected bit active;
 
-    function new(string name, component_base parent, config_db cfg_db);
+    function new(string name, component_base parent);
         super.new(name, parent);
-        this.cfg_db = cfg_db;
-        this.obj_mgr = null;
+        p_obj_mgr = null;
     endfunction: new
 
     task build_phase();
-        super.build_phase();
+        object_base from_db;
+
         this.txn_count = 0;
         this.txn_count_sem = new(1);
         this.active = 0;
+
+        // Retrieve the objection manager using the global access scope (e.g., the *). This is
+        // likely to change in the future because avalon buses aren't going to track things at the
+        // transaction level becaue of the overhead involved. So expect a refactoring here to move
+        // things ouf of the base sequencer.
+        if (!config_db::get("*", "obj_mgr", from_db)) begin
+            log_fatal("Could not obtain reference from configuration database", "CONNECT");
+        end
+        if (from_db == null) begin
+            log_fatal("Objection manager reference from configuration database was null");
+        end
+
+        if (!$cast(p_obj_mgr, from_db)) begin
+            log_fatal("Object manager from configuration database not of expected type", "CONNECT");
+        end else begin
+            log_debug("Obtained objection manager from configuration database", "CONNECT");
+        end
+
+        // Build any children
+        super.build_phase();
+
     endtask: build_phase
 
     task connect_phase();
@@ -54,11 +72,11 @@ virtual class sequencer_base extends component_base;
         //
         // TL;DR Don't do things like `#100ns` in your test cases. It would be bad.
         //
-        if (this.obj_mgr == null) begin
+        if (p_obj_mgr == null) begin
             log_fatal("Derived sequencer did not set the objection manager during connect_phase()");
         end
 
-        this.obj_mgr.raise(this);
+        p_obj_mgr.raise(this);
         forever begin
             // Block until there is a sequence in the queue, then run it
             log_debug("Waiting to receive sequence");
@@ -131,7 +149,7 @@ virtual class sequencer_base extends component_base;
         // Woe to thee that adds sequences after time has started.
         if (this.txn_count == 0 && this.seq_queue.size() == 0 && this.active == 0) begin
             log_debug("All sequences and transactions are completed");
-            this.obj_mgr.drop(this);
+            p_obj_mgr.drop(this);
         end
         this.txn_count_sem.put();
 

@@ -24,7 +24,7 @@ class host_guest_channel #(type T) extends component_base;
         end
 
         else begin
-            log_info($sformatf("Created %s -> %s channel", this.host_name, this.guest_name));
+            log_debug($sformatf("Created %s -> %s channel", this.host_name, this.guest_name));
         end
 
     endfunction: new
