@@ -24,6 +24,7 @@ package verif_pkg;
 `include "monitor_base.sv"
 `include "scoreboard_base.sv"
 `include "env_base.sv"
+`include "test_config_base.sv"
 `include "test_base.sv"
 
 endpackage: verif_pkg
