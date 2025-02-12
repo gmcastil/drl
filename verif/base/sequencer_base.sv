@@ -111,12 +111,14 @@ virtual class sequencer_base extends component_base;
     endtask: add_sequence
 
     // Derived sequencers implement their own transaction handling, and the base class handles
-    // transaction counting and tracking
+    // transaction counting, tracking and timestamping.
     task add_transaction(ref transaction_base txn);
         this.txn_count_sem.get();
+        // It is assumed here that transactions were created by the child class before adding
+        txn.created = $time;
         this.txn_count++;
         this.txn_count_sem.put();
-        log_debug($sformatf("Transaction added. Transaction pending count = %0d", this.txn_count));
+        log_debug($sformatf("Transaction added at %0t. Transaction pending count = %0d", txn.created, this.txn_count));
     endtask: add_transaction
 
     // Derived sequencers implement their own response handling (if any)
