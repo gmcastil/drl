@@ -42,6 +42,12 @@ virtual class component_base extends object_base;
         end
     endtask: build_phase
 
+    virtual task post_build_phase();
+        foreach (this.children[i]) begin
+            this.children[i].post_build_phase();
+        end
+    endtask: post_build_phase
+
     virtual task connect_phase();
         foreach (this.children[i]) begin
             this.children[i].connect_phase();

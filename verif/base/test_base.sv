@@ -8,6 +8,10 @@ virtual class test_base extends component_base;
         super.build_phase();
     endtask: build_phase
 
+    task post_build_phase();
+        super.post_build_phase();
+    endtask: post_build_phase
+
     task connect_phase();
         super.connect_phase();
     endtask: connect_phase
