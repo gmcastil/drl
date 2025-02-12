@@ -19,6 +19,8 @@ class object_base;
         return this.get_name();
     endfunction: get_full_hierarchical_name
 
+    // Derived classes that have hierarchy (e.g., the component_base class) override this to
+    // recursively set their children
     function void set_log_level(log_level_t level);
         this.current_log_level = level;
     endfunction: set_log_level
