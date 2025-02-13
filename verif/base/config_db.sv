@@ -15,8 +15,8 @@ class config_db;
 
     static log_level_t current_log_level ;
 
-    static function void init(string name);
-        name = name;
+    static function void init(string init_name);
+        name = init_name;
         current_log_level = logger::get_default_log_level();
         log_debug($sformatf("Initialized configuration database with name '%s'", name));
     endfunction: init

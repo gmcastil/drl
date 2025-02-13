@@ -20,33 +20,33 @@ virtual class sequencer_base extends component_base;
     endfunction: new
 
     task build_phase();
-        object_base from_db;
-
         this.txn_count = 0;
         this.txn_count_sem = new(1);
         this.active = 0;
 
-        // Retrieve the objection manager using the global access scope (e.g., the *). This is
-        // likely to change in the future because avalon buses aren't going to track things at the
-        // transaction level becaue of the overhead involved. So expect a refactoring here to move
-        // things ouf of the base sequencer.
+        // Build any children
+        super.build_phase();
+
+    endtask: build_phase
+
+    task post_build_phase();
+
+        object_base from_db;
+
         if (!config_db::get("*", "obj_mgr", from_db)) begin
-            log_fatal("Could not obtain reference from configuration database", "CONNECT");
+            log_fatal("Could not obtain reference from configuration database", "BUILD");
         end
         if (from_db == null) begin
             log_fatal("Objection manager reference from configuration database was null");
         end
 
         if (!$cast(p_obj_mgr, from_db)) begin
-            log_fatal("Object manager from configuration database not of expected type", "CONNECT");
+            log_fatal("Object manager from configuration database not of expected type", "BUILD");
         end else begin
-            log_debug("Obtained objection manager from configuration database", "CONNECT");
+            log_debug("Obtained objection manager from configuration database", "BUILD");
         end
 
-        // Build any children
-        super.build_phase();
-
-    endtask: build_phase
+    endtask: post_build_phase
 
     task connect_phase();
         super.connect_phase();

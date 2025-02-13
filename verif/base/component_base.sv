@@ -1,7 +1,20 @@
 virtual class component_base extends object_base;
 
+    // Enable phase aware logging and messages
+    typedef enum {
+        PHASE_BUILD,
+        PHASE_POST_BUILD,
+        PHASE_CONNECT,
+        PHASE_PRE_RUN,
+        PHASE_RUN,
+        PHASE_REPORT,
+        PHASE_FINAL
+    } phase_t;
+
     component_base parent;
     component_base children [string];
+
+    phase_t current_phase;
 
     function new(string name = "component_base", component_base parent = null);
         super.new(name);
@@ -53,6 +66,12 @@ virtual class component_base extends object_base;
             this.children[i].connect_phase();
         end
     endtask: connect_phase
+
+    virtual task pre_run_phase();
+        foreach (this.children[i]) begin
+            this.children[i].pre_run_phase();
+        end
+    endtask: pre_run_phase
 
     virtual task run_phase();
     endtask: run_phase
