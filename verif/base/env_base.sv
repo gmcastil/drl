@@ -4,21 +4,5 @@ virtual class env_base extends component_base;
         super.new(name, parent);
     endfunction: new
 
-    task build_phase();
-        super.build_phase();
-    endtask: build_phase
-
-    task connect_phase();
-        super.connect_phase();
-    endtask: connect_phase
-
-    task run_phase();
-        super.run_phase();
-    endtask: run_phase
-
-    task final_phase();
-        super.final_phase();
-    endtask: final_phase
-
 endclass: env_base
 

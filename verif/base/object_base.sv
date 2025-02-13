@@ -9,7 +9,7 @@ class object_base;
         this.current_log_level =  logger::get_default_log_level();
     endfunction: new
 
-    function string get_name();
+    virtual function string get_name();
         return this.name;
     endfunction: get_name
 
@@ -21,11 +21,11 @@ class object_base;
 
     // Derived classes that have hierarchy (e.g., the component_base class) override this to
     // recursively set their children
-    function void set_log_level(log_level_t level);
+    virtual function void set_log_level(log_level_t level);
         this.current_log_level = level;
     endfunction: set_log_level
 
-    function log_level_t get_log_level();
+    virtual function log_level_t get_log_level();
         return this.current_log_level;
     endfunction: get_log_level
 

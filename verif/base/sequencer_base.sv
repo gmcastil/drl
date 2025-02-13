@@ -19,17 +19,18 @@ virtual class sequencer_base extends component_base;
         p_obj_mgr = null;
     endfunction: new
 
-    task build_phase();
-        this.txn_count = 0;
-        this.txn_count_sem = new(1);
-        this.active = 0;
-
-        // Build any children
+    virtual function void build_phase();
+        // Build any children first
         super.build_phase();
 
-    endtask: build_phase
+        // Initialize locks, status, and counters
+        this.active = 0;
+        this.txn_count = 0;
+        this.txn_count_sem = new(1);
 
-    task post_build_phase();
+    endfunction: build_phase
+
+    virtual function void pre_run_phase();
 
         object_base from_db;
 
@@ -46,15 +47,11 @@ virtual class sequencer_base extends component_base;
             log_debug("Obtained objection manager from configuration database", "BUILD");
         end
 
-    endtask: post_build_phase
-
-    task connect_phase();
-        super.connect_phase();
-    endtask: connect_phase
+    endfunction: pre_run_phase
 
     // The base sequencer is responsible for adding sequences to the internal sequence queue,
     // popping them out, and calling their start methods.
-    task run_phase();
+    virtual task run_phase();
         sequence_base seq;
         // This objection gets dropped later at the end of the last transaction in the last sequence,
         // when the seqeunce counter and transaction counters are both zero.
@@ -72,10 +69,6 @@ virtual class sequencer_base extends component_base;
         //
         // TL;DR Don't do things like `#100ns` in your test cases. It would be bad.
         //
-        if (p_obj_mgr == null) begin
-            log_fatal("Derived sequencer did not set the objection manager during connect_phase()");
-        end
-
         p_obj_mgr.raise(this);
         forever begin
             // Block until there is a sequence in the queue, then run it
@@ -95,10 +88,6 @@ virtual class sequencer_base extends component_base;
             this.active = 0;
         end
     endtask: run_phase
-
-    task final_phase();
-        super.final_phase();
-    endtask: final_phase
 
     // Adds a sequence to the internal sequence queue for processing into transactions
     task add_sequence(sequence_base seq);
