@@ -63,6 +63,35 @@ virtual class component_base extends object_base;
     // }}}
 
     // Utilty methods --- {{{
+    function void retrieve_object(string role, ref object_base obj);
+        config_db::scope_t scope = this.parent;
+
+        if (role == "") begin
+            log_fatal($sformatf("Attempted to retrieve object with empty role from scope: %s",
+                        scope.get_full_hierarchical_name()));
+        end
+        if (!config_db::get(scope, role, obj)) begin
+            log_fatal($sformatf("Could not retrieve role '%s' from scope: %s",
+                        role, scope.get_full_hierarchical_name()));
+        end
+
+        return;
+
+    endfunction: retrieve_object
+
+    function void retrieve_global_object(string role, ref object_base obj);
+
+        if (role == "") begin
+            log_fatal("Attempted to retrieve object with empty role from global scope");
+        end
+
+        if (!config_db::get(null, role, obj)) begin
+            log_fatal($sformatf("Could not retrieve role '%s' from global scope", role));
+        end
+
+        return;
+
+    endfunction: retrieve_global_object
 
     // Registers an object in the configuration database under ourselves
     function void register_object(string role, object_base obj);
@@ -91,7 +120,7 @@ virtual class component_base extends object_base;
             log_fatal($sformatf("Attempted to register null object with global scope and role '%s'.", role));
         end
         if (role == "") begin
-            log_fatal($sformatf("Attempted to register object under with global scope and empty role."));
+            log_fatal($sformatf("Attempted to register object with global scope and empty role."));
         end
 
         if (!config_db::set(null, role, obj)) begin

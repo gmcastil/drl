@@ -20,3 +20,7 @@ env:
 	$(VLOG) -work $(WORK) -sv $(TB_DIR)/tests/tests_pkg.sv
 	$(VLOG) -work $(WORK) -sv $(SIM_DIR)/top.sv
 
+.PHONY: archive
+archive:
+	zip -r verif.zip ./ -x rundir
+

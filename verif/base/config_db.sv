@@ -104,6 +104,7 @@ class config_db;
 
     static function bit remove(scope_t scope, role_t role);
         log_fatal("config_db::remove() not implemented yet)");
+        return 0;
     endfunction: remove
 
     static function void list();
