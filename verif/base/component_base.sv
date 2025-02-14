@@ -18,6 +18,9 @@ virtual class component_base extends object_base;
     component_base parent;
     component_base children [string];
 
+    // Role to register components of this type as
+    protected string role = "component";
+
     function new(string name = "component_base", component_base parent = null);
         super.new(name);
         this.parent = parent;
@@ -38,12 +41,16 @@ virtual class component_base extends object_base;
         end
     endfunction: add_child
 
-    task print_hierarchy();
+    function component_base get_parent();
+        return this.parent;
+    endfunction: get_parent
+
+    function void print_hierarchy();
         $display("[%s]", this.name);
         foreach (this.children[i]) begin
             this.children[i].print_hierarchy();
         end
-    endtask: print_hierarchy
+    endfunction: print_hierarchy
 
     // Overriding base class function because we actually have hierarchy (base class is flat)
     function string get_full_hierarchical_name();
@@ -64,24 +71,25 @@ virtual class component_base extends object_base;
     function void log_phase_entry();
         string msg;
         msg = $sformatf("Entering phase %s", this.current_phase.name());
-        logger::log(LOG_INFO, this.get_full_hierarchical_name(), msg);
+        logger::log(LOG_INFO, this.get_full_hierarchical_name(), msg, "");
         $fflush();
-    endfunction log_phase_entry
+    endfunction: log_phase_entry
 
     function void log_phase_exit();
         string msg;
         msg = $sformatf("Leaving phase %s", this.current_phase.name());
-        logger::log(LOG_INFO, this.get_full_hierarchical_name(), msg);
+        logger::log(LOG_INFO, this.get_full_hierarchical_name(), msg, "");
         $fflush();
-    endfunction log_phase_exit
+    endfunction: log_phase_exit
 
-    // Recursive lifecycle executiong - each phase in component_base should execute its own logic
-    // first and then call super.<phase> to ensure parent logic runs.
-    //
-    // Derived classes should call super.<phase> and then their own logic.
+    // Recursive lifecycle execution. Each phase in component_base
+    // should execute its own logic first and then call super.<phase>
+    // to ensure parent logic runs. Derived classes should call
+    // super.<phase> and then their own logic.
     virtual function void build_phase();
         this.current_phase = BUILD;
         log_phase_entry();
+
         foreach (this.children[i]) begin
             this.children[i].build_phase();
         end
@@ -90,9 +98,23 @@ virtual class component_base extends object_base;
     virtual function void config_phase();
         this.current_phase = CONFIG;
         log_phase_entry();
+
+        // Automatically register
+        if (this.parent == null) begin
+            log_info($sformatf("Skipping registration for top-level component: %s",
+                                    this.get_full_hierarchical_name()));
+        end else begin
+            if (!config_db::set(this.parent, this.role, this)) begin
+                log_fatal("Could not register configuration database ");
+            end
+        end
+
+        // Now that the parent is registered, recursively call config_phase() on all
+        // our children
         foreach (this.children[i]) begin
             this.children[i].config_phase();
         end
+
     endfunction: config_phase
 
     virtual function void connect_phase();
@@ -142,13 +164,28 @@ virtual class component_base extends object_base;
 
     task run_lifecycle();
 
+        this.current_phase = BUILD;
         this.build_phase();
+
+        this.current_phase = CONFIG;
         this.config_phase();
+
+        this.current_phase = CONNECT;
         this.connect_phase();
+
+        this.current_phase = PRE_RUN;
         this.pre_run_phase();
+
+        this.current_phase = RUN;
         this.run_phase();
+
+        this.current_phase = EXTRACT;
         this.extract_phase();
+
+        this.current_phase = CHECK;
         this.check_phase();
+
+        this.current_phase = FINAL;
         this.final_phase();
 
     endtask: run_lifecycle

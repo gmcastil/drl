@@ -1,17 +1,27 @@
 class config_db;
 
-    // The configuration database can store component references as well as sequences,
-    // transactions, and anything else that derives from this lowest base class
-    static object_base store [string];
-
     static string name;
 
-    /* NOTE For now, use * as the scope when setting and retrieving keys for wildcards. In the
-     * future refactor this to actually use wildcards so that items can be stored with the scope
-     * '*' and then retrieved with whatever scope is desired.  For example, set("*", foo, bar) and
-     * then retrieved with get("baz", foo, blar).  As is, you have to retrieve it with * as the
-     * scope.
-     */
+    typedef component_base scope_t;
+    typedef string role_t;
+
+    // The configuration database stores references to components and other objects derived from
+    // the base class. Each object is stored using a role-based key, ensuring that components can
+    // retrieve the correct instance without relying on explicit hierarchical names.
+    //
+    // There are two data structures used for storage:
+    // 1. `store [scope_t][role_t]` - Hierarchical storage:
+    //    - Objects are registered under their parent component (scope).
+    //    - Lookups traverse up the hierarchy if the role is not found at the initial scope.
+    //
+    // 2. `global_store [role_t]` - Global storage:
+    //    - Used for system-wide objects (e.g., obj_mgr, global settings).
+    //    - These objects are accessible from anywhere using a `null` scope in `get()`.
+    //
+    // The `set()` function registers objects into the correct storage based on scope,
+    // while `get()` first checks global_store before searching up the hierarchy.
+    static object_base store [scope_t][role_t];
+    static object_base global_store [role_t];
 
     static log_level_t current_log_level ;
 
@@ -21,59 +31,83 @@ class config_db;
         log_debug($sformatf("Initialized configuration database with name '%s'", name));
     endfunction: init
 
-    static function bit set(string scope, string key, object_base value);
-        string full_key;
+    static function bit set(scope_t scope, role_t role, object_base obj);
+        // Ensure the role is valid (cannot be empty)
+        if (role == "") begin
+            log_fatal("Objects cannot be registered with empty roles");
+            return 0;
+        end
 
-        full_key = {scope, ".", key};
-        if (store.exists(full_key)) begin
-            log_error($sformatf("Key '%s' was already found in configuration database", full_key));
+        // Global scope
+        if (scope == null) begin
+            if (global_store.exists(role)) begin
+                log_error($sformatf("Registration failed. Role '%s' already in global scope", role));
+                return 0;
+            end else begin
+                global_store[role] = obj;
+                log_debug($sformatf("Registered role '%s' in global scope", role));
+                return 1;
+            end
+        end
+
+        // Store in provided scope
+        if (store.exists(scope) && store[scope].exists(role)) begin
+            log_error($sformatf("Role '%s' already exists in configuration database", role));
             return 0;
         end else begin
-            store[full_key] = value;
-            log_debug($sformatf("Registered %s in configuration database with key %s", value.get_name(), full_key));
+            store[scope][role] = obj;
+            log_debug($sformatf("Registered role '%s' in scope: %s", 
+                                    role, scope.get_full_hierarchical_name()));
             return 1;
         end
+
     endfunction: set
 
-    static function bit get(string scope, string key, ref object_base value);
-        string full_key;
-
-        full_key = {scope, ".", key};
-        if (store.exists(full_key)) begin
-            value = store[full_key];
-            log_debug($sformatf("Retrieved %s from configuration database with key %s", value.get_name(), full_key));
-            return 1;
-        end else begin
-            log_error($sformatf("Key '%s' not found in configuration database", full_key));
+    static function bit get(scope_t scope, role_t role, ref object_base obj);
+        // Ensure the role is valid (cannot be empty)
+        if (role == "") begin
+            log_fatal("Objects cannot be registered with empty roles");
             return 0;
         end
+
+        // Global scope
+        if (scope == null) begin
+            if (global_store.exists(role)) begin
+                obj = global_store[role];
+                log_debug($sformatf("Found role '%s' in global scope", role));
+                return 1;
+            end else begin
+                log_error($sformatf("Lookup failed. Role '%s' not found in global scope.", role));
+                return 0;
+            end
+        end
+
+        // Search the given scope and if not found, climb up the hierarchy looking to see if the
+        // parents registered the component.
+        while (scope != null) begin
+            log_debug($sformatf("Searching for role '%s' in scope: %s",
+                                    role, scope.get_full_hierarchical_name()));
+            if (store.exists(scope) && store[scope].exists(role)) begin
+                obj = store[scope][role];
+                log_debug($sformatf("Found role '%s' in scope: %s", 
+                                        role, scope.get_full_hierarchical_name()));
+                return 1;
+            end else begin
+                scope = scope.get_parent();
+            end
+        end
+
+        log_error($sformatf("Lookup failed. Role '%s' not found in hierarchy.", role));
+        return 0;
+
     endfunction: get
 
-    static function bit remove(string scope, string key);
-        string full_key;
-        object_base value;
-
-        full_key = {scope, ".", key};
-        if (store.exists(full_key)) begin
-            value = store[full_key];
-            store.delete(full_key);
-            log_debug($sformatf("Deleted %s from configuration database with key %s", value.get_name(), full_key));
-            return 1;
-        end else begin
-            log_error($sformatf("Key '%s' not found in configuration database", full_key));
-            return 0;
-        end
+    static function bit remove(scope_t scope, role_t role);
+        log_fatal("config_db::remove() not implemented yet)");
     endfunction: remove
 
     static function void list();
-        if (store.num() == 0) begin
-            log_debug("Configuration database is empty");
-        end else begin
-            log_debug("Current database contents:");
-            foreach (store[key]) begin
-                log_debug($sformatf("  Key: '%s', Component: %s", key, store[key].get_name()));
-            end
-        end
+        log_fatal("config_db::list() not implemented yet)");
     endfunction: list
 
     static function void log(log_level_t level, string msg, string id = "");

@@ -16,7 +16,8 @@ virtual class sequencer_base extends component_base;
 
     function new(string name, component_base parent);
         super.new(name, parent);
-        p_obj_mgr = null;
+        this.p_obj_mgr = null;
+        this.role = "sequencer";
     endfunction: new
 
     virtual function void build_phase();
@@ -31,20 +32,21 @@ virtual class sequencer_base extends component_base;
     endfunction: build_phase
 
     virtual function void pre_run_phase();
-
         object_base from_db;
 
-        if (!config_db::get("*", "obj_mgr", from_db)) begin
-            log_fatal("Could not obtain reference from configuration database", "BUILD");
+        super.pre_run_phase();
+
+        if (!config_db::get(null, "obj_mgr", from_db)) begin
+            log_fatal("Could not retrieve object manager from configuration database");
         end
         if (from_db == null) begin
             log_fatal("Objection manager reference from configuration database was null");
         end
 
         if (!$cast(p_obj_mgr, from_db)) begin
-            log_fatal("Object manager from configuration database not of expected type", "BUILD");
+            log_fatal("Object manager from configuration database not of expected type");
         end else begin
-            log_debug("Obtained objection manager from configuration database", "BUILD");
+            log_debug("Obtained objection manager from configuration database");
         end
 
     endfunction: pre_run_phase
@@ -140,7 +142,7 @@ virtual class sequencer_base extends component_base;
         // Woe to thee that adds sequences after time has started.
         if (this.txn_count == 0 && this.seq_queue.size() == 0 && this.active == 0) begin
             log_debug("All sequences and transactions are completed");
-            p_obj_mgr.drop(this);
+            this.p_obj_mgr.drop(this);
         end
         this.txn_count_sem.put();
 

@@ -6,17 +6,21 @@ package verif_pkg;
     // objects
     typedef class sequence_base;
     typedef class sequencer_base;
+
+    // THe configuration database needs to be aware of these types of objects
+    typedef class component_base;
+    typedef class object_base;
     // }}}
 
     // Static classes, typedefs, global values, macros
 `include "logger.sv"
+`include "config_db.sv"
 
     // Base components
 `include "object_base.sv"
 `include "config_base.sv"
 `include "component_base.sv"
 `include "objection_mgr.sv"
-`include "config_db.sv"
 `include "transaction_base.sv"
 `include "host_guest_channel.sv"
 `include "sequencer_base.sv"

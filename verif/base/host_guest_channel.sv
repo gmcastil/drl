@@ -1,4 +1,4 @@
-class host_guest_channel #(type T) extends component_base;
+class host_guest_channel #(type T) extends object_base;
 
     mailbox #(T) host_to_guest;
     mailbox #(T) guest_to_host;
@@ -6,10 +6,9 @@ class host_guest_channel #(type T) extends component_base;
     string host_name;
     string guest_name;
 
-    function new(string name, component_base parent = null,
-                    string host_name = "", string guest_name = "");
+    function new(string name, string host_name = "", string guest_name = "");
 
-        super.new(name, parent);
+        super.new(name);
         this.host_to_guest = new();
         this.guest_to_host = new();
 
