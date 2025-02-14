@@ -31,7 +31,7 @@ virtual class component_base extends object_base;
         this.current_phase = UNINITIALIZED;
     endfunction: new
 
-    /* Parent-child management and context functions */
+    // Parent-child management --- {{{
     function void add_child(component_base child);
         if (this.children.exists(child.name)) begin
             // If the child exists in the hierarchy then something has gone very wrong
@@ -60,6 +60,51 @@ virtual class component_base extends object_base;
         return this.name;
     endfunction: get_full_hierarchical_name
 
+    // }}}
+
+    // Utilty methods --- {{{
+
+    // Registers an object in the configuration database under ourselves
+    function void register_object(string role, object_base obj);
+
+        if (obj == null) begin
+            log_fatal($sformatf("Attempted to register null object under '%s' with role '%s'.",
+                        this.get_full_hierarchical_name(), role));
+        end
+        if (role == "") begin
+            log_fatal($sformatf("Attempted to register object under '%s' with empty role.",
+                        this.get_full_hierarchical_name()));
+        end
+
+        if (!config_db::set(this, role, obj)) begin
+            log_fatal($sformatf("Could not register object '%s' under '%s' with role '%s'.",
+                        obj.get_full_hierarchical_name(), this.get_full_hierarchical_name(), role));
+        end
+        return;
+
+    endfunction: register_object
+
+    // Registers a globally available object in the configuration database 
+    function void register_global_object(string role, object_base obj);
+
+        if (obj == null) begin
+            log_fatal($sformatf("Attempted to register null object with global scope and role '%s'.", role));
+        end
+        if (role == "") begin
+            log_fatal($sformatf("Attempted to register object under with global scope and empty role."));
+        end
+
+        if (!config_db::set(null, role, obj)) begin
+            log_fatal($sformatf("Could not register object '%s' with global scope and role '%s'.",
+                        obj.get_full_hierarchical_name(), role));
+        end
+        return;
+
+    endfunction: register_global_object
+    // }}}
+
+    // Logging methods --- {{{
+
     // Overriding base class function so we can set the log levels of our children
     function void set_log_level(log_level_t level);
         this.current_log_level = level;
@@ -82,10 +127,10 @@ virtual class component_base extends object_base;
         $fflush();
     endfunction: log_phase_exit
 
-    // Recursive lifecycle execution. Each phase in component_base
-    // should execute its own logic first and then call super.<phase>
-    // to ensure parent logic runs. Derived classes should call
-    // super.<phase> and then their own logic.
+    // }}}
+
+    // Lifecycle methods --- {{{
+
     virtual function void build_phase();
         this.current_phase = BUILD;
         log_phase_entry();
@@ -189,6 +234,8 @@ virtual class component_base extends object_base;
         this.final_phase();
 
     endtask: run_lifecycle
+
+    // }}}
 
 endclass: component_base
 
