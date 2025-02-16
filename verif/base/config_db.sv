@@ -1,27 +1,31 @@
-class config_db;
+// Similar to UVM, our configuration database is a type-parameterized static class, which allows us
+// to store just about anything we want regardless of type.  
+//
+// First, there isn't really one configuration database, there is one configuration database *per
+// parameterized type* and each of them is a static class unto itself. This means that the same
+// scope and role can store different values, if the values are of a different types. Further, there
+// is no mixing between values of different types - a role and scope of one type cannot be used to
+// retrieve the value of a different type.  There is also no way for a lookup to search adjacent
+// configuration databases.
+//
+// Changes to the configuration database:
+// - Type-parameterized now so we can store and retrieve arbitrary objects.
+// - Reverting to string scope and roles (removed typedefs)
+// - Switching to "" for global lookups
+// - Calls to set() and get() now require type-parameterization
+// - Internally, only a single storage structure is required (strings instead of compenent_base
+// types as the scope key allows this - essentially, the "" string is a new namespace).
+// - Removed hierarchical lookups - users have to specify precisely the scope they wish to retrieve
+// from.
+// - Removing the remove() method since it isn't useful and UVM doesn't support it - I'm not chasing
+// dynamic creation of verification components, so that sort of thing isnt' as useful.
+// - Automatic self-registration needs to be moved to the component_base not object_base
+
+class config_db#(type T);
 
     static string name;
 
-    typedef component_base scope_t;
-    typedef string role_t;
-
-    // The configuration database stores references to components and other objects derived from
-    // the base class. Each object is stored using a role-based key, ensuring that components can
-    // retrieve the correct instance without relying on explicit hierarchical names.
-    //
-    // There are two data structures used for storage:
-    // 1. `store [scope_t][role_t]` - Hierarchical storage:
-    //    - Objects are registered under their parent component (scope).
-    //    - Lookups traverse up the hierarchy if the role is not found at the initial scope.
-    //
-    // 2. `global_store [role_t]` - Global storage:
-    //    - Used for system-wide objects (e.g., obj_mgr, global settings).
-    //    - These objects are accessible from anywhere using a `null` scope in `get()`.
-    //
-    // The `set()` function registers objects into the correct storage based on scope,
-    // while `get()` first checks global_store before searching up the hierarchy.
-    static object_base store [scope_t][role_t];
-    static object_base global_store [role_t];
+    static T store [string][string];
 
     static log_level_t current_log_level ;
 
@@ -31,85 +35,42 @@ class config_db;
         log_debug($sformatf("Initialized configuration database with name '%s'", name));
     endfunction: init
 
-    static function bit set(scope_t scope, role_t role, object_base obj);
-        // Ensure the role is valid (cannot be empty)
+    static function void set(string scope, string role, T obj);
+
+        // Ensure the role is valid (do not register empty roles or use them as wildcards)
         if (role == "") begin
-            log_fatal("Objects cannot be registered with empty roles");
+            log_error($sformatf("Empty role not supported in scope \"%s\"", scope);
             return 0;
         end
 
-        // Global scope
-        if (scope == null) begin
-            if (global_store.exists(role)) begin
-                log_error($sformatf("Registration failed. Role '%s' already in global scope", role));
-                return 0;
-            end else begin
-                global_store[role] = obj;
-                log_debug($sformatf("Registered role '%s' in global scope", role));
-                return 1;
-            end
-        end
-
-        // Store in provided scope
+        // Log if duplicate key was provided for this type, but we still overwrite
         if (store.exists(scope) && store[scope].exists(role)) begin
-            log_error($sformatf("Role '%s' already exists in configuration database", role));
-            return 0;
-        end else begin
-            store[scope][role] = obj;
-            log_debug($sformatf("Registered role '%s' in scope: %s", 
-                                    role, scope.get_full_hierarchical_name()));
-            return 1;
+            log_debug($sformatf("Duplicate scope or role found for type %s", $typename(T)));
         end
+        store[scope][role] = obj;
+        return 1;
 
     endfunction: set
 
-    static function bit get(scope_t scope, role_t role, ref object_base obj);
-        // Ensure the role is valid (cannot be empty)
+    static function bit get(string scope, string role, ref T obj);
+
         if (role == "") begin
-            log_fatal("Objects cannot be registered with empty roles");
+            log_error($sformatf("Empty role not supported in scope \"%s\"", scope));
             return 0;
         end
 
-        // Global scope
-        if (scope == null) begin
-            if (global_store.exists(role)) begin
-                obj = global_store[role];
-                log_debug($sformatf("Found role '%s' in global scope", role));
-                return 1;
-            end else begin
-                log_error($sformatf("Lookup failed. Role '%s' not found in global scope.", role));
-                return 0;
-            end
+        if (store.exists(scope) && store[scope].exists(role)) begin
+            obj = store[scope][role];
+            return 1;
+        end else begin
+            log_error($sformatf("Role not found in scope \"%s\" for type %s", scope, $typename(T)));
+            return 0;
         end
-
-        // Search the given scope and if not found, climb up the hierarchy looking to see if the
-        // parents registered the component.
-        while (scope != null) begin
-            log_debug($sformatf("Searching for role '%s' in scope: %s",
-                                    role, scope.get_full_hierarchical_name()));
-            if (store.exists(scope) && store[scope].exists(role)) begin
-                obj = store[scope][role];
-                log_debug($sformatf("Found role '%s' in scope: %s", 
-                                        role, scope.get_full_hierarchical_name()));
-                return 1;
-            end else begin
-                scope = scope.get_parent();
-            end
-        end
-
-        log_error($sformatf("Lookup failed. Role '%s' not found in hierarchy.", role));
-        return 0;
-
     endfunction: get
 
-    static function bit remove(scope_t scope, role_t role);
-        log_fatal("config_db::remove() not implemented yet)");
-        return 0;
-    endfunction: remove
-
-    static function void list();
-        log_fatal("config_db::list() not implemented yet)");
-    endfunction: list
+    static function void dump();
+        log_fatal("config_db::dump() not implemented yet)");
+    endfunction: dump
 
     static function void log(log_level_t level, string msg, string id = "");
         if (level > current_log_level) begin
