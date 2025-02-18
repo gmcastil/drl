@@ -1,69 +1,208 @@
-virtual class proxy_base;
+class component_base;
 
-    pure virtual function void get(ref proxy_base value);
+    string name;
 
-endclass: proxy_base
+    component_base parent;
+    component_base children [string];
 
-class proxy_element#(type T) extends proxy_base;
+    function new(string name, component_base parent);
+        this.name = name;
+        this.parent = parent;
+        if (parent != null) begin
+            parent.add_child(this);
+        end
+    endfunction
+
+    function void add_child(component_base child);
+        if (this.children.exists(child.name)) begin
+            $display("Child '%s' was already found in hierarchy", child.name);
+        end else begin
+            this.children[child.get_name()] = child;
+        end
+    endfunction: add_child
+
+    function component_base get_parent();
+        return this.parent;
+    endfunction: get_parent
+
+    function string get_name();
+        return this.name;
+    endfunction
+
+    function string get_full_hierarchical_name();
+        if (this.parent != null) begin
+            return {this.parent.get_full_hierarchical_name(), ".", this.get_name()};
+        end
+        return this.name;
+    endfunction: get_full_hierarchical_name
+
+endclass
+
+virtual class config_proxy_base;
+
+    pure virtual function void get(ref config_proxy_base value);
+
+endclass: config_proxy_base
+
+class config_proxy#(type T) extends config_proxy_base;
 
     T obj;
 
     function new(T value);
         this.obj = value;
+        /* $display("Stored object of type %s ~> %s", $typename(value), $typename(this.obj)); */
     endfunction: new
 
-    function void get(ref proxy_base value);
+    virtual function void get(ref config_proxy_base value);
+        $display("-------------------------------------------");
+        $display("Attempting to cast type %s -> %s", $typename(this), $typename(value));
         $cast(value, this);
     endfunction: get
 
-endclass: proxy_element
+endclass: config_proxy
 
-class config_element;
+class config_db#(type T);
 
-    string scope;
-    string role;
+    // Need to map component base instances to config_store instances
+    typedef config_proxy_base config_store [string];
+    static config_store m_rsc [component_base];
 
-    proxy_base obj;
+    static function void set(component_base cntxt, string inst_name, string field_name, T value);
+        string full_key;
+        config_store m_rsc_element;
+        config_proxy#(T) proxy_value;
 
-    function new(string scope, string role, proxy_base value);
+        // Do not store empty field names
+        if (field_name == "") begin
+            return;
+        end
 
-        this.scope = scope;
-        this.role = role;
-        this.obj = value;
+        // Two possible cases for null - either store globally or store at the root level (not the
+        // same things). For now, return early and address later when implementing global storage.
+        if (cntxt == null) begin
+            return;
+        end
 
-    endfunction: new
+        // Models how `uvm_config_db` does key formation
+        if (inst_name == "") begin
+            full_key = {cntxt.get_full_hierarchical_name(), ".", field_name};
+        end else if (field_name != "") begin
+            full_key = {cntxt.get_full_hierarchical_name(), ".", inst_name, ".", field_name};
+        end
 
-endclass: config_element
-// 
-// class config_db#(type t);
-// 
-//     static proxy_base store [string];
-// 
-//     static function void set(string scope, string role, t value);
-// 
-//         string key = {scope, ".", role};
-//         proxy_element#(t) proxied = new(value);
-//         store[key] = proxied;
-// 
-//     endfunction: set
-// 
-// endclass: config_db
+        if (!m_rsc.exists(cntxt)) begin
+            $display("Initializing entry in m_rsc for component %s", cntxt.get_name());
+        end
 
-module top ();
+        // Wrap the type-parameteried value as a proxy value
+        proxy_value = new(value);
+        m_rsc_element[full_key] = proxy_value;
+        $display("DEBUG: Storing key '%s' as type %s", full_key, $typename(proxy_value));
+        $display("DEBUG: Storing key '%s' in component '%s'", full_key, cntxt.get_full_hierarchical_name());
+
+        // Can store this in here because the type is derived from the base class handle it expects.
+        m_rsc[cntxt] = m_rsc_element;
+
+    endfunction: set
+
+    static function bit get(component_base cntxt, string inst_name, string field_name, inout T value);
+        string full_key;
+        config_store cs;
+        config_proxy_base cb;
+        config_proxy#(T) proxy_value;
+
+        if (cntxt == null) begin
+            $display("Context null or field not found in database", field_name);
+            return 0;
+        end
+
+        if (!m_rsc.exists(cntxt)) begin
+            $display("DEBUG: Context '%s' not found in m_rsc, checking parent...", cntxt.get_full_hierarchical_name());
+            return get(cntxt.get_parent(), inst_name, field_name, value);
+        end
+
+        // Models how `uvm_config_db` does key formation
+        if (inst_name == "") begin
+            full_key = {cntxt.get_full_hierarchical_name(), ".", field_name};
+        end else if (field_name != "") begin
+            full_key = {cntxt.get_full_hierarchical_name(), ".", inst_name, ".", field_name};
+        end
+
+        // If key exists in the current components config store, unwrap the proxy into the
+        // appropriate container and then return 1
+        if (m_rsc[cntxt].exists(full_key)) begin
+            $display("DEBUG: Found key '%s' in context '%s'", full_key, cntxt.get_full_hierarchical_name());
+            cs = m_rsc[cntxt];  // This is the config_store
+            cb = cs[full_key];
+            if (!$cast(proxy_value, cb)) begin
+                $display("ERROR: Cast failed for key '%s'. cb type is %s, expected config_proxy#(%s)", 
+                             full_key, $typename(cb), $typename(T));
+                return 0;
+            end
+            if (proxy_value == null) begin
+                $display("error proxy value is nul");
+            end else begin
+                $display("type of proxy_valud is %s", $typename(proxy_value));
+            end
+
+            $display("Stored value type for key '%s': %s", full_key, $typename(cb));
+            /* proxy_value.get(value); */
+            return 1;
+        end
+
+        // Recursively call until we find the matching context or hit the top
+        return get(cntxt.get_parent(), inst_name, field_name, value);
+
+    endfunction: get
+
+endclass: config_db
+
+module top;
 
     initial begin
-        automatic proxy_element#(int) p = new(42);
-        automatic config_element e = new("parent", "entry", p);
+        automatic component_base test_case = new("test_case", null);
+        automatic component_base env = new("env", test_case);
+        automatic component_base drv = new("drv", env);
 
-        automatic proxy_element#(string) p_str = new("hello");
-        automatic config_element e_str = new("parent_2", "entry_2", p_str);
+        // Variables to store retrieved values
+        automatic int timeout;
+        automatic string protocol;
+        automatic bit logging_enabled;
+        automatic string queue_mode;
+
+        $display("Testing config_db set...");
+        config_db#(int)::set(test_case, "", "global_timeout", 100);   // Stored at the root
+        config_db#(string)::set(env, "", "protocol", "AXI");          // Stored in env
+        config_db#(bit)::set(drv, "", "enable_logging", 1);           // Stored in drv
+        config_db#(string)::set(drv, "queue", "mode", "ROUND_ROBIN"); // Specific to drv.queue
+
+        $display("Set operation completed.");
+
+        // Attempt to retrieve values from different levels
+        $display("Retrieving 'global_timeout' from drv...");
+        if (config_db#(int)::get(drv, "", "global_timeout", timeout))
+            $display("FOUND: global_timeout = %0d", timeout);
+        else
+            $display("NOT FOUND: global_timeout");
+
+        $display("Retrieving 'protocol' from drv...");
+        if (config_db#(string)::get(drv, "", "protocol", protocol))
+            $display("FOUND: protocol = %s", protocol);
+        else
+            $display("NOT FOUND: protocol");
+
+        $display("Retrieving 'enable_logging' from drv...");
+        if (config_db#(bit)::get(drv, "", "enable_logging", logging_enabled))
+            $display("FOUND: enable_logging = %b", logging_enabled);
+        else
+            $display("NOT FOUND: enable_logging");
+
+        $display("Retrieving 'mode' from drv.queue...");
+        if (config_db#(string)::get(drv, "queue", "mode", queue_mode))
+            $display("FOUND: mode = %s", queue_mode);
+        else
+            $display("NOT FOUND: mode");
+
     end
 
-endmodule: top
-
-        /* config_element element; */
-        /* proxy_element#(int) proxied; */
-
-        /* proxied = new(42); */
-        /* element = new("parent", "entry", proxied); */
-
+endmodule
