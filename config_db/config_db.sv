@@ -3,6 +3,7 @@ class component_base;
     string name;
 
     component_base parent;
+    //  value_type        identifier    [key_type]
     component_base children [string];
 
     function new(string name, component_base parent);
@@ -29,6 +30,16 @@ class component_base;
         return this.name;
     endfunction
 
+    function void print_hierarchy();
+        static string leader = "";
+        $display("%s> %s", leader, this.get_name());
+        foreach (this.children[i]) begin
+            leader = {leader, "-"};
+            this.children[i].print_hierarchy();
+        end
+        leader = "";
+    endfunction: print_hierarchy
+
     function string get_full_hierarchical_name();
         if (this.parent != null) begin
             return {this.parent.get_full_hierarchical_name(), ".", this.get_name()};
@@ -42,6 +53,8 @@ virtual class config_proxy_base;
 
     pure virtual function void get(ref config_proxy_base value);
 
+    pure virtual function void display();
+
 endclass: config_proxy_base
 
 class config_proxy#(type T) extends config_proxy_base;
@@ -50,21 +63,24 @@ class config_proxy#(type T) extends config_proxy_base;
 
     function new(T value);
         this.obj = value;
-        /* $display("Stored object of type %s ~> %s", $typename(value), $typename(this.obj)); */
     endfunction: new
 
-    virtual function void get(ref config_proxy_base value);
-        $display("-------------------------------------------");
-        $display("Attempting to cast type %s -> %s", $typename(this), $typename(value));
+    function void get(ref config_proxy_base value);
         $cast(value, this);
     endfunction: get
+
+    function void display();
+        $display("my obj = %s", this.obj);
+    endfunction
 
 endclass: config_proxy
 
 class config_db#(type T);
 
     // Need to map component base instances to config_store instances
+    //       value_type       idetnifier    [key_tyupe]
     typedef config_proxy_base config_store [string];
+
     static config_store m_rsc [component_base];
 
     static function void set(component_base cntxt, string inst_name, string field_name, T value);
@@ -97,7 +113,6 @@ class config_db#(type T);
         // Wrap the type-parameteried value as a proxy value
         proxy_value = new(value);
         m_rsc_element[full_key] = proxy_value;
-        $display("DEBUG: Storing key '%s' as type %s", full_key, $typename(proxy_value));
         $display("DEBUG: Storing key '%s' in component '%s'", full_key, cntxt.get_full_hierarchical_name());
 
         // Can store this in here because the type is derived from the base class handle it expects.
@@ -105,11 +120,12 @@ class config_db#(type T);
 
     endfunction: set
 
-    static function bit get(component_base cntxt, string inst_name, string field_name, inout T value);
+    static function bit get(component_base cntxt, string inst_name, string field_name, ref T value);
         string full_key;
         config_store cs;
         config_proxy_base cb;
-        config_proxy#(T) proxy_value;
+
+        config_proxy#(T) unwrapped_value;
 
         if (cntxt == null) begin
             $display("Context null or field not found in database", field_name);
@@ -132,21 +148,11 @@ class config_db#(type T);
         // appropriate container and then return 1
         if (m_rsc[cntxt].exists(full_key)) begin
             $display("DEBUG: Found key '%s' in context '%s'", full_key, cntxt.get_full_hierarchical_name());
-            cs = m_rsc[cntxt];  // This is the config_store
-            cb = cs[full_key];
-            if (!$cast(proxy_value, cb)) begin
-                $display("ERROR: Cast failed for key '%s'. cb type is %s, expected config_proxy#(%s)", 
-                             full_key, $typename(cb), $typename(T));
-                return 0;
-            end
-            if (proxy_value == null) begin
-                $display("error proxy value is nul");
-            end else begin
-                $display("type of proxy_valud is %s", $typename(proxy_value));
-            end
-
-            $display("Stored value type for key '%s': %s", full_key, $typename(cb));
-            /* proxy_value.get(value); */
+            cs = m_rsc[cntxt];
+            cs[full_key].get(cb);
+        
+            $cast(unwrapped_value, cb);
+            value = unwrapped_value.obj; 
             return 1;
         end
 
@@ -156,6 +162,8 @@ class config_db#(type T);
     endfunction: get
 
 endclass: config_db
+
+// ------------------------------------------- Main testbench ------------- {{{
 
 module top;
 
@@ -170,6 +178,8 @@ module top;
         automatic bit logging_enabled;
         automatic string queue_mode;
 
+        // env.print_hierarchy();
+
         $display("Testing config_db set...");
         config_db#(int)::set(test_case, "", "global_timeout", 100);   // Stored at the root
         config_db#(string)::set(env, "", "protocol", "AXI");          // Stored in env
@@ -177,6 +187,7 @@ module top;
         config_db#(string)::set(drv, "queue", "mode", "ROUND_ROBIN"); // Specific to drv.queue
 
         $display("Set operation completed.");
+        $fflush();
 
         // Attempt to retrieve values from different levels
         $display("Retrieving 'global_timeout' from drv...");
