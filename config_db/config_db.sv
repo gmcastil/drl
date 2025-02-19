@@ -82,6 +82,7 @@ class config_db#(type T);
     typedef config_proxy_base config_store [string];
 
     static config_store m_rsc [component_base];
+    static config_store global_rsc;
 
     static function void set(component_base cntxt, string inst_name, string field_name, T value);
         string full_key;
@@ -93,30 +94,35 @@ class config_db#(type T);
             return;
         end
 
-        // Two possible cases for null - either store globally or store at the root level (not the
-        // same things). For now, return early and address later when implementing global storage.
+        // Global entries
         if (cntxt == null) begin
-            return;
+            full_key = {inst_name, "::", field_name};
+
+            // Wrap the type-parameteried value as a proxy value
+            proxy_value = new(value);
+            global_rsc[full_key] = proxy_value;
+
+        // Local entries
+        end else begin
+            if (inst_name == "") begin
+                full_key = {cntxt.get_full_hierarchical_name(), ".", field_name};
+            end else if (field_name != "") begin
+                full_key = {cntxt.get_full_hierarchical_name(), ".", inst_name, ".", field_name};
+            end
+
+            // Wrap the type-parameteried value as a proxy value
+            proxy_value = new(value);
+            m_rsc_element[full_key] = proxy_value;
+
+            if (!m_rsc.exists(cntxt)) begin
+                $display("Initializing entry in m_rsc for component %s", cntxt.get_name());
+            end
+
+            // Can store this in here because the type is derived from the base class handle it expects.
+            m_rsc[cntxt] = m_rsc_element;
+
+            $display("DEBUG: Storing key '%s' in component '%s'", full_key, cntxt.get_full_hierarchical_name());
         end
-
-        // Models how `uvm_config_db` does key formation
-        if (inst_name == "") begin
-            full_key = {cntxt.get_full_hierarchical_name(), ".", field_name};
-        end else if (field_name != "") begin
-            full_key = {cntxt.get_full_hierarchical_name(), ".", inst_name, ".", field_name};
-        end
-
-        if (!m_rsc.exists(cntxt)) begin
-            $display("Initializing entry in m_rsc for component %s", cntxt.get_name());
-        end
-
-        // Wrap the type-parameteried value as a proxy value
-        proxy_value = new(value);
-        m_rsc_element[full_key] = proxy_value;
-        $display("DEBUG: Storing key '%s' in component '%s'", full_key, cntxt.get_full_hierarchical_name());
-
-        // Can store this in here because the type is derived from the base class handle it expects.
-        m_rsc[cntxt] = m_rsc_element;
 
     endfunction: set
 
@@ -163,14 +169,13 @@ class config_db#(type T);
 
 endclass: config_db
 
-// ------------------------------------------- Main testbench ------------- {{{
-
 module top;
 
     initial begin
         automatic component_base test_case = new("test_case", null);
         automatic component_base env = new("env", test_case);
         automatic component_base drv = new("drv", env);
+        automatic int fallback_timeout;
 
         // Variables to store retrieved values
         automatic int timeout;
@@ -178,13 +183,16 @@ module top;
         automatic bit logging_enabled;
         automatic string queue_mode;
 
-        // env.print_hierarchy();
-
         $display("Testing config_db set...");
-        config_db#(int)::set(test_case, "", "global_timeout", 100);   // Stored at the root
-        config_db#(string)::set(env, "", "protocol", "AXI");          // Stored in env
-        config_db#(bit)::set(drv, "", "enable_logging", 1);           // Stored in drv
-        config_db#(string)::set(drv, "queue", "mode", "ROUND_ROBIN"); // Specific to drv.queue
+        
+        // Global storage test
+        config_db#(int)::set(null, "", "global_timeout", 100);
+        
+        // Local storage tests
+        config_db#(string)::set(env, "", "protocol", "AXI");
+        config_db#(bit)::set(drv, "", "enable_logging", 1);
+        config_db#(string)::set(drv, "queue", "mode", "ROUND_ROBIN");
+        config_db#(int)::set(drv, "", "global_timeout", 50); // Override global
 
         $display("Set operation completed.");
         $fflush();
@@ -214,6 +222,12 @@ module top;
         else
             $display("NOT FOUND: mode");
 
+        // Test global fallback when local is not found
+        $display("Retrieving 'global_timeout' from env (should fallback to global)...");
+        if (config_db#(int)::get(env, "", "global_timeout", fallback_timeout))
+            $display("FOUND: global_timeout = %0d", fallback_timeout);
+        else
+            $display("NOT FOUND: global_timeout");
     end
 
 endmodule
