@@ -13,6 +13,33 @@ log_level_t default_log_level = LOG_INFO;
 // Static class used for all logging activities
 class logger;
 
+    static string name = "logger";
+
+    static function void init();
+        // TODO These should be numbers, not strings
+        string runtime_level_str;
+        log_level_t runtime_log_level;
+
+        // Get the runtime log level from outside the test case
+        if ($value$plusargs("LOG_LEVEL=%s", runtime_level_str)) begin
+            case (runtime_level_str)
+                "FATAL": begin runtime_log_level = LOG_FATAL;  end
+                "ERROR": begin runtime_log_level = LOG_ERROR;  end
+                "WARN":  begin runtime_log_level = LOG_WARN;   end
+                "INFO":  begin runtime_log_level = LOG_INFO;   end
+                "DEBUG": begin runtime_log_level = LOG_DEBUG;  end
+                default: begin
+                    // Exit out if an invalid log level was provided - sims might take a long time
+                    log(LOG_FATAL, name, $sformatf("Unknown logging level provided: %s", runtime_level_str), "");
+                end
+            endcase
+        end
+
+        // Set the logging level for all components
+        logger::set_default_log_level(runtime_log_level);
+
+    endfunction: init
+
     static function void set_default_log_level(log_level_t level);
         default_log_level = level;
     endfunction: set_default_log_level

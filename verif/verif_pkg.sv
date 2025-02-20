@@ -30,6 +30,6 @@ package verif_pkg;
 `include "scoreboard_base.sv"
 `include "env_base.sv"
 `include "test_config_base.sv"
-`include "test_base.sv"
+`include "test_case_base.sv"
 
 endpackage: verif_pkg

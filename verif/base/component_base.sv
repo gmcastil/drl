@@ -18,9 +18,6 @@ virtual class component_base extends object_base;
     component_base parent;
     component_base children [string];
 
-    // Role to register components of this type as
-    protected string role = "component";
-
     function new(string name = "component_base", component_base parent = null);
         super.new(name);
         this.parent = parent;
@@ -37,7 +34,7 @@ virtual class component_base extends object_base;
             // If the child exists in the hierarchy then something has gone very wrong
             log_fatal($sformatf("Child '%s' was already found in hierarchy", child.name));
         end else begin
-            this.children[child.get_name()] = child;
+            this.children[child.get_full_hierarchical_name()] = child;
         end
     endfunction: add_child
 
@@ -45,91 +42,26 @@ virtual class component_base extends object_base;
         return this.parent;
     endfunction: get_parent
 
-    function void print_hierarchy();
-        $display("[%s]", this.name);
-        foreach (this.children[i]) begin
-            this.children[i].print_hierarchy();
+    function void print_hierarchy(component_base root);
+        component_base child;
+
+        // Print current component
+        $display("full name = %s", root.get_full_hierarchical_name());
+
+        foreach (root.children[child_name]) begin
+            $display("child_naem = %s", child_name);
         end
+
     endfunction: print_hierarchy
 
     // Overriding base class function because we actually have hierarchy (base class is flat)
     function string get_full_hierarchical_name();
         if (this.parent != null) begin
-            return {this.parent.get_full_hierarchical_name(), ".", this.name};
+            return {this.parent.get_full_hierarchical_name(), ".", this.get_name()};
         end
-        return this.name;
+        return this.get_name();
     endfunction: get_full_hierarchical_name
 
-    // }}}
-
-    // Utilty methods --- {{{
-    function void retrieve_object(string role, ref object_base obj);
-        config_db::scope_t scope = this.parent;
-
-        if (role == "") begin
-            log_fatal($sformatf("Attempted to retrieve object with empty role from scope: %s",
-                        scope.get_full_hierarchical_name()));
-        end
-        if (!config_db::get(scope, role, obj)) begin
-            log_fatal($sformatf("Could not retrieve role '%s' from scope: %s",
-                        role, scope.get_full_hierarchical_name()));
-        end
-
-        return;
-
-    endfunction: retrieve_object
-
-    function void retrieve_global_object(string role, ref object_base obj);
-
-        if (role == "") begin
-            log_fatal("Attempted to retrieve object with empty role from global scope");
-        end
-
-        if (!config_db::get(null, role, obj)) begin
-            log_fatal($sformatf("Could not retrieve role '%s' from global scope", role));
-        end
-
-        return;
-
-    endfunction: retrieve_global_object
-
-    // Registers an object in the configuration database under ourselves
-    function void register_object(string role, object_base obj);
-
-        if (obj == null) begin
-            log_fatal($sformatf("Attempted to register null object under '%s' with role '%s'.",
-                        this.get_full_hierarchical_name(), role));
-        end
-        if (role == "") begin
-            log_fatal($sformatf("Attempted to register object under '%s' with empty role.",
-                        this.get_full_hierarchical_name()));
-        end
-
-        if (!config_db::set(this, role, obj)) begin
-            log_fatal($sformatf("Could not register object '%s' under '%s' with role '%s'.",
-                        obj.get_full_hierarchical_name(), this.get_full_hierarchical_name(), role));
-        end
-        return;
-
-    endfunction: register_object
-
-    // Registers a globally available object in the configuration database 
-    function void register_global_object(string role, object_base obj);
-
-        if (obj == null) begin
-            log_fatal($sformatf("Attempted to register null object with global scope and role '%s'.", role));
-        end
-        if (role == "") begin
-            log_fatal($sformatf("Attempted to register object with global scope and empty role."));
-        end
-
-        if (!config_db::set(null, role, obj)) begin
-            log_fatal($sformatf("Could not register object '%s' with global scope and role '%s'.",
-                        obj.get_full_hierarchical_name(), role));
-        end
-        return;
-
-    endfunction: register_global_object
     // }}}
 
     // Logging methods --- {{{
@@ -173,18 +105,6 @@ virtual class component_base extends object_base;
         this.current_phase = CONFIG;
         log_phase_entry();
 
-        // Automatically register
-        if (this.parent == null) begin
-            log_info($sformatf("Skipping registration for top-level component: %s",
-                                    this.get_full_hierarchical_name()));
-        end else begin
-            if (!config_db::set(this.parent, this.role, this)) begin
-                log_fatal("Could not register configuration database ");
-            end
-        end
-
-        // Now that the parent is registered, recursively call config_phase() on all
-        // our children
         foreach (this.children[i]) begin
             this.children[i].config_phase();
         end

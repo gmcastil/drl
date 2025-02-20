@@ -17,7 +17,6 @@ virtual class sequencer_base extends component_base;
     function new(string name, component_base parent);
         super.new(name, parent);
         this.p_obj_mgr = null;
-        this.role = "sequencer";
     endfunction: new
 
     virtual function void build_phase();
@@ -34,27 +33,26 @@ virtual class sequencer_base extends component_base;
     virtual function void pre_run_phase();
         object_base from_db;
 
+        // Ensure the base class initializes objectsion or any global state first
         super.pre_run_phase();
 
-        if (!config_db::get(null, "obj_mgr", from_db)) begin
+        // Retrieve the objection manager and store it as a member (its used at runtime)
+        if (!config_db#(objection_mgr)::get(this, "", "obj_mgr", this.p_obj_mgr)) begin
             log_fatal("Could not retrieve object manager from configuration database");
         end
-        if (from_db == null) begin
+        if (this.p_obj_mgr == null) begin
             log_fatal("Objection manager reference from configuration database was null");
-        end
-
-        if (!$cast(p_obj_mgr, from_db)) begin
-            log_fatal("Object manager from configuration database not of expected type");
-        end else begin
-            log_debug("Obtained objection manager from configuration database");
         end
 
     endfunction: pre_run_phase
 
     // The base sequencer is responsible for adding sequences to the internal sequence queue,
     // popping them out, and calling their start methods.
-    virtual task run_phase();
+    virtual task automatic run_phase();
         sequence_base seq;
+        // Ensure the base class initializes objectsion or any global state first
+        super.run_phase();
+
         // This objection gets dropped later at the end of the last transaction in the last sequence,
         // when the seqeunce counter and transaction counters are both zero.
         //

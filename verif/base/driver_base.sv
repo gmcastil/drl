@@ -2,7 +2,6 @@ virtual class driver_base extends component_base;
 
     function new(string name = "driver_base", component_base parent = null);
         super.new(name, parent);
-        this.role = "driver";
     endfunction: new
 
     // Derived drivers implement all their own transaction handling, and the base class handles
