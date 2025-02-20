@@ -1,112 +1,206 @@
-// Similar to UVM, our configuration database is a type-parameterized static class, which allows us
-// to store just about anything we want regardless of type.  
-//
-// First, there isn't really one configuration database, there is one configuration database *per
-// parameterized type* and each of them is a static class unto itself. This means that the same
-// scope and role can store different values, if the values are of a different types. Further, there
-// is no mixing between values of different types - a role and scope of one type cannot be used to
-// retrieve the value of a different type.  There is also no way for a lookup to search adjacent
-// configuration databases.
-//
-// Changes to the configuration database:
-// - Type-parameterized now so we can store and retrieve arbitrary objects.
-// - Reverting to string scope and roles (removed typedefs)
-// - Switching to "" for global lookups
-// - Calls to set() and get() now require type-parameterization
-// - Internally, only a single storage structure is required (strings instead of compenent_base
-// types as the scope key allows this - essentially, the "" string is a new namespace).
-// - Removed hierarchical lookups - users have to specify precisely the scope they wish to retrieve
-// from.
-// - Removing the remove() method since it isn't useful and UVM doesn't support it - I'm not chasing
-// dynamic creation of verification components, so that sort of thing isnt' as useful.
-// - Automatic self-registration needs to be moved to the component_base not object_base
+virtual class config_proxy_base;
+
+    pure virtual function void get(ref config_proxy_base value);
+
+endclass: config_proxy_base
+
+class config_proxy#(type T) extends config_proxy_base;
+
+    T obj;
+
+    function new(T value);
+        this.obj = value;
+    endfunction: new
+
+    function void get(ref config_proxy_base value);
+        $cast(value, this);
+    endfunction: get
+
+endclass: config_proxy
+
+class config_db_mgr;
+
+    // Need to map component base instances to config_store instances (unused outside this class).
+    // This is an associative array with strings as the keys and config_proxy_base (proxies for the
+    // type-parameterized config_proxy#(type T) types)
+    typedef config_proxy_base config_store [string];
+
+    string name;
+
+    static config_db_mgr self;
+
+    config_store scoped_rsc [component_base];
+    string scoped_key_queue [component_base] [$];
+
+    config_store global_rsc;
+    string global_key_queue [$];
+
+    protected function new(string name);
+        this.name = name;
+        $display("Created singleton instance of configuration database manager");
+    endfunction: new
+    
+    static function config_db_mgr get_instance();
+        if (self == null) begin
+            self = new("config_db");
+        end
+        return self;
+    endfunction: get_instance
+
+    function void set(component_base cntxt, string inst_name, string field_name, config_proxy_base value);
+
+        string full_key = config_db_build_key(cntxt, inst_name, field_name);
+
+        if (cntxt == null) begin
+
+            // Track unique callers only - most callers will have many keys
+            if (!this.global_rsc.exists(full_key)) begin
+                this.global_key_queue.push_back(full_key);
+            end
+            this.global_rsc[full_key] = value;
+            $display("CONFIG_DB_MGR: Global set [%s] = %p", full_key, value);
+        end else begin
+
+            // Crucial step here - if there isn't an existing entry here, then we initialzie one,
+            // otherwise we extend it
+            if (!this.scoped_rsc.exists(cntxt)) begin
+                this.scoped_rsc[cntxt] = {};
+                $display("CONFIG_DB_MGR: Initializing entry for component %s", cntxt.get_full_hierarchical_name());
+            end else begin
+                $display("CONFIG_DB_MGR: Extending existing entry for component %s", cntxt.get_full_hierarchical_name());
+            end
+
+            // Track unique callers only - most callers will have many keys
+            if (!this.scoped_rsc[cntxt].exists(full_key)) begin
+                this.scoped_key_queue[cntxt].push_back(full_key);
+            end
+            this.scoped_rsc[cntxt][full_key] = value;
+            $display("CONFIG_DB_MGR: Local set [%s] in %s", full_key, cntxt.get_full_hierarchical_name());
+        end
+    
+    endfunction: set
+
+    function bit get(component_base cntxt, string inst_name, string field_name, ref config_proxy_base value);
+
+        string full_key = config_db_build_key(cntxt, inst_name, field_name);
+
+        $display("CONFIG_DB_MGR: Lookup requested for [%s] in %s",
+            full_key, (cntxt != null) ? cntxt.get_full_hierarchical_name() : "GLOBAL");
+
+        // Local lookup
+        if (cntxt != null && this.scoped_rsc.exists(cntxt) && this.scoped_rsc[cntxt].exists(full_key)) begin
+            value = this.scoped_rsc[cntxt][full_key];
+            $display("CONFIG_DB_MGR: Found [%s] in local %s", full_key, cntxt.get_full_hierarchical_name());
+            return 1;
+        end
+
+        // Global lookup
+        if (cntxt == null && this.global_rsc.exists(full_key)) begin
+            value = this.global_rsc[full_key];
+            $display("CONFIG_DB_MGR: Found [%s] in GLOBAL scope", full_key);
+            return 1;
+        end
+
+        // Recursive lookup through parents
+        if (cntxt != null) begin
+            $display("CONFIG_DB_MGR: [%s] not found in %s, checking parent...", 
+                        full_key, cntxt.get_full_hierarchical_name());
+            return get(cntxt.get_parent(), inst_name, field_name, value);
+        end
+
+        // Local and global lookups both failed
+        $display("CONFIG_DB_MGR: Lookup FAILED for [%s]", full_key);
+        return 0;
+
+    endfunction: get
+
+    // Lists all stored global keys and prints which component set each key
+    function void dump_global_hierarchy();
+        string key;
+        // Use the key queue to dump these out so that we can preserve the order
+        $display("\n--- GLOBAL CONFIG DB DUMP ---");
+        foreach (global_key_queue[i]) begin
+            key = global_key_queue[i];
+            $display("  - %s", key);
+        end
+        $display("-----------------------------\n");
+    endfunction
+
+    function void dump_scoped_hierarchy();
+        component_base comp;
+        string key;
+        string keys[$];
+
+        $display("\n--- Scoped config_db Dump ---");
+        foreach (scoped_rsc[comp]) begin
+            $display("  %s (%s)", comp.get_name(), comp.get_full_hierarchical_name());
+
+            for (int i = 0; i < keys.size(); i++) begin
+                $display("    - %s", keys[i]);
+            end
+        end
+        $display("-----------------------------\n");
+    endfunction
+
+endclass: config_db_mgr
 
 class config_db#(type T);
 
-    static string name;
+    static function void set(component_base cntxt, string inst_name, string field_name, T value);
 
-    static T store [string][string];
-
-    static log_level_t current_log_level ;
-
-    static function void init(string init_name);
-        name = init_name;
-        current_log_level = logger::get_default_log_level();
-        log_debug($sformatf("Initialized configuration database with name '%s'", name));
-    endfunction: init
-
-    static function void set(string scope, string role, T obj);
-
-        // Ensure the role is valid (do not register empty roles or use them as wildcards)
-        if (role == "") begin
-            log_error($sformatf("Empty role not supported in scope \"%s\"", scope);
-            return 0;
-        end
-
-        // Log if duplicate key was provided for this type, but we still overwrite
-        if (store.exists(scope) && store[scope].exists(role)) begin
-            log_debug($sformatf("Duplicate scope or role found for type %s", $typename(T)));
-        end
-        store[scope][role] = obj;
-        return 1;
+        config_proxy#(T) proxy_value = new(value);
+        config_db_mgr::get_instance().set(cntxt, inst_name, field_name, proxy_value);
 
     endfunction: set
 
-    static function bit get(string scope, string role, ref T obj);
+    static function bit get(component_base cntxt, string inst_name, string field_name, ref T value);
 
-        if (role == "") begin
-            log_error($sformatf("Empty role not supported in scope \"%s\"", scope));
-            return 0;
-        end
+        config_proxy_base proxy_base;
+        config_proxy#(T) proxy_typed;
 
-        if (store.exists(scope) && store[scope].exists(role)) begin
-            obj = store[scope][role];
+        if (config_db_mgr::get_instance().get(cntxt, inst_name, field_name, proxy_base)) begin
+            $cast(proxy_typed, proxy_base);
+            value = proxy_typed.obj;
             return 1;
         end else begin
-            log_error($sformatf("Role not found in scope \"%s\" for type %s", scope, $typename(T)));
             return 0;
         end
+
     endfunction: get
 
-    static function void dump();
-        log_fatal("config_db::dump() not implemented yet)");
-    endfunction: dump
-
-    static function void log(log_level_t level, string msg, string id = "");
-        if (level > current_log_level) begin
-            return;
-        end
-        logger::log(level, name, msg, id);
-    endfunction: log
-
-    static function void log_info(string msg, string id = "");
-        log(LOG_INFO, msg, id);
-    endfunction: log_info
-
-    static function void log_warn(string msg, string id = "");
-        log(LOG_WARN, msg, id);
-    endfunction: log_warn
-
-    static function void log_debug(string msg, string id = "");
-        log(LOG_DEBUG, msg, id);
-    endfunction: log_debug
-
-    static function void log_error(string msg, string id = "");
-        log(LOG_ERROR, msg, id);
-    endfunction: log_error
-
-    // Logs a fatal message with optional ID and then exits the simulation at that point
-    static function void log_fatal(string msg, string id = "");
-        logger::log(LOG_FATAL, name, msg, id);
-        // The $stacktrace task (can also be called as a function) was only added to the language in
-        // 2023 but has been implemented by Questa since at least 2013. To try to maintain some sort of
-        // compatibility, this can be turned off at runtime if needed
-`ifndef NO_STACKTRACE_SUPPORT
-        $stacktrace;
-`endif
-        $fflush();
-        $fatal(1);
-    endfunction: log_fatal
-
 endclass: config_db
+
+function string config_db_build_key(component_base cntxt, string inst_name, string field_name);
+
+    string full_key;
+    string msg;
+
+    if (field_name == "") begin
+        $display("No key for you");
+        msg = $sformatf("CONFIG_DB_MGR ERROR: Field name is empty! Context: %s, inst_name: %s",
+                        (cntxt != null) ? cntxt.get_full_hierarchical_name() : "GLOBAL",
+                        (inst_name != "") ? inst_name : "<empty>");
+        $stacktrace;
+        $fatal(1, msg);
+    end
+
+    if (cntxt == null) begin
+        full_key = inst_name;
+    end else if (inst_name == "") begin
+        full_key = cntxt.get_full_hierarchical_name();
+    end else begin
+        full_key = {cntxt.get_full_hierarchical_name(), ".", inst_name};
+    end
+
+    // Before appending the field name, make sure its not the empty string (e.g., global
+    // registration without an inst_name
+    if (full_key == "") begin
+        full_key = field_name;
+    end else begin
+        full_key = {full_key, ".", field_name};
+    end
+
+    return full_key;
+
+endfunction: config_db_build_key
 
