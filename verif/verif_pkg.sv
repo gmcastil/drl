@@ -5,7 +5,7 @@ package verif_pkg;
     // Sequence objects store references to sequencers and sequencers store queues of sequence
     // objects
     typedef class sequence_base;
-    typedef class sequencer_base;
+    // typedef class sequencer_base;
 
     // THe configuration database needs to be aware of these types of objects
     typedef class component_base;
@@ -23,7 +23,6 @@ package verif_pkg;
 `include "objection_mgr.sv"
 `include "transaction_base.sv"
 `include "host_guest_channel.sv"
-`include "sequencer_base.sv"
 `include "sequence_base.sv"
 `include "driver_base.sv"
 `include "monitor_base.sv"
