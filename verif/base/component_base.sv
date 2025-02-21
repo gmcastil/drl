@@ -32,7 +32,7 @@ virtual class component_base extends object_base;
     function void add_child(component_base child);
         if (this.children.exists(child.name)) begin
             // If the child exists in the hierarchy then something has gone very wrong
-            log_fatal($sformatf("Child '%s' was already found in hierarchy", child.name));
+            log_fatal($sformatf("Child '%s' was already found in hierarchy", child.get_name()));
         end else begin
             this.children[child.get_full_hierarchical_name()] = child;
         end

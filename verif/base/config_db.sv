@@ -118,12 +118,13 @@ class config_db_mgr;
     function void dump_global_hierarchy();
         string key;
         // Use the key queue to dump these out so that we can preserve the order
-        $display("\n--- GLOBAL CONFIG DB DUMP ---");
+        $display("INFO: Global config_db Dump");
         foreach (global_key_queue[i]) begin
             key = global_key_queue[i];
-            $display("  - %s", key);
+            $display("  %s", key);
         end
-        $display("-----------------------------\n");
+        $display("");
+
     endfunction
 
     function void dump_scoped_hierarchy();
@@ -131,15 +132,15 @@ class config_db_mgr;
         string key;
         string keys[$];
 
-        $display("\n--- Scoped config_db Dump ---");
+        $display("INFO: Scoped config_db Dump");
         foreach (scoped_rsc[comp]) begin
             $display("  %s (%s)", comp.get_name(), comp.get_full_hierarchical_name());
-
+            keys = scoped_key_queue[comp];
             for (int i = 0; i < keys.size(); i++) begin
-                $display("    - %s", keys[i]);
+                $display("    %s", keys[i]);
             end
+            $display("");
         end
-        $display("-----------------------------\n");
     endfunction
 
 endclass: config_db_mgr

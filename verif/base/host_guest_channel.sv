@@ -22,9 +22,7 @@ class host_guest_channel #(type T) extends object_base;
             log_fatal($sformatf("Could not initialize %s <- %s channel", host_name, guest_name));
         end
 
-        else begin
-            log_debug($sformatf("Created %s -> %s channel", this.host_name, this.guest_name));
-        end
+        log_debug($sformatf("Created %s -> %s channel", this.host_name, this.guest_name));
 
     endfunction: new
 
@@ -33,8 +31,8 @@ class host_guest_channel #(type T) extends object_base;
             log_fatal("Attempted to send or receive a null transaction");
         end
         this.host_to_guest.put(txn);
-        log_debug($sformatf("Type: %s Host: %s -> Guest: %s Txn Type: %s",
-                "SEND", this.host_name, this.guest_name, $typename(T)));
+        log_debug($sformatf("%s: %s -> %s Txn Type: %s",
+                "HOST -> GUEST (put)", this.host_name, this.guest_name, $typename(T)));
     endtask: send_to_guest
 
     task send_to_host(T txn);
@@ -42,20 +40,20 @@ class host_guest_channel #(type T) extends object_base;
             log_fatal("Attempted to send or receive a null transaction");
         end
         this.guest_to_host.put(txn);
-        log_debug($sformatf("Type: %s Host: %s <- Guest: %s Txn Type: %s",
-                "SEND", this.host_name, this.guest_name, $typename(T)));
+        log_debug($sformatf("%s: %s <- %s Txn Type: %s",
+                "GUEST -> HOST (put)", this.host_name, this.guest_name, $typename(T)));
     endtask: send_to_host
 
     task recv_from_host(ref T txn);
         this.host_to_guest.get(txn);
-        log_debug($sformatf("Type: %s Host: %s -> Guest: %s Txn Type: %s",
-                "RECV", this.host_name, this.guest_name, $typename(T)));
+        log_debug($sformatf("%s: %s -> %s Txn Type: %s",
+                "HOST -> GUEST (get)", this.host_name, this.guest_name, $typename(T)));
     endtask: recv_from_host
 
     task recv_from_guest(ref T txn);
         this.guest_to_host.get(txn);
-        log_debug($sformatf("Type: %s Host: %s <- Guest: %s Txn Type: %s",
-                "RECV", this.host_name, this.guest_name, $typename(T)));
+        log_debug($sformatf("%s: %s -> %s Txn Type: %s",
+                "GUEST -> HOST (get)", this.host_name, this.guest_name, $typename(T)));
     endtask: recv_from_guest
 
 endclass: host_guest_channel
