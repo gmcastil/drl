@@ -18,7 +18,6 @@ package verif_pkg;
 
     // Base components
 `include "object_base.sv"
-`include "config_base.sv"
 `include "component_base.sv"
 `include "objection_mgr.sv"
 `include "transaction_base.sv"

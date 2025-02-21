@@ -123,6 +123,11 @@ module top #(
             endcase
         end
 
+        fork
+            #100ns;
+            $finish;
+        join_none
+
         // DUT configuration
         dut_cfg = '{
             device: DEVICE,
@@ -143,17 +148,18 @@ module top #(
 
         test_case.build_phase();
         test_case.connect_phase();
+        fork
+            test_case.run_phase();
+        join_none
 
-        /* fork */
-        /*     test_case.run_phase(); */
-        /* join_none */
-        /* @(test_case.test_done); */
+        @(test_case.test_done);
 
         /* test_case.final_phase(); */
 
         $finish;
     end
     // }}}
+    //
 
 endmodule: top
 

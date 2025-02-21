@@ -42,7 +42,7 @@ class uart_test_base #(
     virtual task run_phase();
         log(LOG_DEBUG, "Run phase started");
         super.run_phase();
-        log(LOG_INFO, "Run phase completed");
+        log(LOG_DEBUG, "Run phase completed");
         ->test_done;
     endtask: run_phase
 

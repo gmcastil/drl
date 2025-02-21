@@ -33,6 +33,7 @@ class uart_env #(parameter int AXI_ADDR_WIDTH, parameter int AXI_DATA_WIDTH)
     endfunction: new
 
     task build_phase();
+        log(LOG_INFO, "Starting environment build phase");
         super.build_phase();
         // TODO Encapsulate this as a mailbox_component and then create
         // it here, register it in the config_db so that the driver and
@@ -46,9 +47,17 @@ class uart_env #(parameter int AXI_ADDR_WIDTH, parameter int AXI_DATA_WIDTH)
     endtask: build_phase
 
     task connect_phase();
+        log(LOG_INFO, "Starting environment connect phase");
         super.connect_phase();
+        /* Hacks ahoy, here */
         this.driver.set_mailbox(this.txn_queue);
         this.sequencer.set_mailbox(this.txn_queue);
     endtask: connect_phase
+
+    task run_phase();
+        log(LOG_INFO, "Starting environment run phase");
+        super.run_phase();
+        log(LOG_INFO, "Finished environment run phase");
+    endtask: run_phase
 
 endclass: uart_env

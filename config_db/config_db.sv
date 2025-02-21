@@ -70,15 +70,28 @@ class config_proxy#(type T) extends config_proxy_base;
 
 endclass: config_proxy
 
-// Need to map component base instances to config_store instances
-typedef config_proxy_base config_store [string];
-
 class config_db_mgr;
 
-    static config_store m_rsc [component_base];
-    static config_store global_rsc;
+    // Need to map component base instances to config_store instances (unused outside this class)
+    typedef config_proxy_base config_store [string];
 
-    static function void set(component_base cntxt, string inst_name, string field_name, config_proxy_base value);
+    static config_db_mgr self;
+
+    config_store m_rsc [component_base];
+    config_store global_rsc;
+
+    protected function new();
+        $display("Created singleton instance of configuration database manager");
+    endfunction: new
+    
+    static function config_db_mgr get_instance();
+        if (self == null) begin
+            self = new();
+        end
+        return self;
+    endfunction: get_instance
+
+    function void set(component_base cntxt, string inst_name, string field_name, config_proxy_base value);
 
         string full_key;
 
@@ -100,24 +113,24 @@ class config_db_mgr;
         end
 
         if (cntxt == null) begin
-            global_rsc[full_key] = value;
+            this.global_rsc[full_key] = value;
             $display("CONFIG_DB_MGR: Global set [%s] = %p", full_key, value);
         end else begin
             // Crucial step here - if there isn't an existing entry here, then we initialzie one,
             // otherwise we extend it
-            if (!m_rsc.exists(cntxt)) begin
-                m_rsc[cntxt] = {};
+            if (!this.m_rsc.exists(cntxt)) begin
+                this.m_rsc[cntxt] = {};
                 $display("CONFIG_DB_MGR: Initializing entry for component %s", cntxt.get_full_hierarchical_name());
             end else begin
                 $display("CONFIG_DB_MGR: Extending existing entry for component %s", cntxt.get_full_hierarchical_name());
             end
-            m_rsc[cntxt][full_key] = value;
+            this.m_rsc[cntxt][full_key] = value;
             $display("CONFIG_DB_MGR: Set [%s] in %s", full_key, cntxt.get_full_hierarchical_name());
         end
     
     endfunction: set
 
-    static function bit get(component_base cntxt, string inst_name, string field_name, ref config_proxy_base value);
+    function bit get(component_base cntxt, string inst_name, string field_name, ref config_proxy_base value);
 
         string full_key;
 
@@ -137,15 +150,15 @@ class config_db_mgr;
             full_key, (cntxt != null) ? cntxt.get_full_hierarchical_name() : "GLOBAL");
 
         // Local lookup
-        if (cntxt != null && m_rsc.exists(cntxt) && m_rsc[cntxt].exists(full_key)) begin
-            value = m_rsc[cntxt][full_key];
+        if (cntxt != null && this.m_rsc.exists(cntxt) && this.m_rsc[cntxt].exists(full_key)) begin
+            value = this.m_rsc[cntxt][full_key];
             $display("CONFIG_DB_MGR: Found [%s] in %s", full_key, cntxt.get_full_hierarchical_name());
             return 1;
         end
 
         // Global lookup
-        if (cntxt == null && global_rsc.exists(full_key)) begin
-            value = global_rsc[full_key];
+        if (cntxt == null && this.global_rsc.exists(full_key)) begin
+            value = this.global_rsc[full_key];
             $display("CONFIG_DB_MGR: Found [%s] in GLOBAL scope", full_key);
             return 1;
         end
@@ -170,7 +183,7 @@ class config_db#(type T);
     static function void set(component_base cntxt, string inst_name, string field_name, T value);
 
         config_proxy#(T) proxy_value = new(value);
-        config_db_mgr::set(cntxt, inst_name, field_name, proxy_value);
+        config_db_mgr::get_instance().set(cntxt, inst_name, field_name, proxy_value);
 
     endfunction: set
 
@@ -179,9 +192,9 @@ class config_db#(type T);
         config_proxy_base proxy_base;
         config_proxy#(T) proxy_typed;
 
-        if (config_db_mgr::get(cntxt, inst_name, field_name, proxy_base)) begin
-                $cast(proxy_typed, proxy_base);
-                value = proxy_typed.obj;
+        if (config_db_mgr::get_instance().get(cntxt, inst_name, field_name, proxy_base)) begin
+            $cast(proxy_typed, proxy_base);
+            value = proxy_typed.obj;
             return 1;
         end else begin
             return 0;
@@ -189,127 +202,28 @@ class config_db#(type T);
 
     endfunction: get
 
-//        // Global entries
-//        if (cntxt == null) begin
-//            full_key = {inst_name, ".", field_name};
-//            // Wrap the type-parameteried value as a proxy value
-//            proxy_value = new(value);
-//            config_db_mgr::global_rsc[full_key] = proxy_value;
-//            $display("Storing key '%s' in global scope", full_key);
-//            $display("");
-//        // Local entries
-//        end else begin
-//
-//            // Add a helper method here
-//            if (config_db_mgr::m_rsc.exists(cntxt)) begin
-//                $display("Extending entry in m_rsc for component %s", cntxt.get_name());
-//                store = config_db_mgr::m_rsc[cntxt];
-//            end else begin
-//                $display("Initializing entry in m_rsc for component %s", cntxt.get_name());
-//            end
-//
-//            // Wrap the type-parameteried value as a proxy value
-//            proxy_value = new(value);
-//            store[full_key] = proxy_value;
-//
-//            // Can store this in here because the type is derived from the base class handle it expects.
-//            config_db_mgr::m_rsc[cntxt] = store;
-//
-//            $display("Storing key '%s' in component '%s'", full_key, cntxt.get_full_hierarchical_name());
-//            dump_local();
-//            $display("");
-//
-//        end
-/*
-    static function bit get(component_base cntxt, string inst_name, string field_name, ref T value);
-        string full_key;
-        config_store store;
+    /* static function void dump_local(); */
 
-        config_proxy_base cb;
-        config_proxy#(T) unwrapped_value;
+    /*     int index = 0; */
+    /*     $display("Dumping local database"); */
+    /*     $display("Total components: %0d", config_db_mgr::m_rsc.num()); */
+    /*     if (config_db_mgr::m_rsc.num() == 0) begin */
+    /*         $display("Database empty!!!!"); */
+    /*         return; */
+    /*     end */
 
-        bit found = 0;
+    /*     foreach(config_db_mgr::m_rsc[cntxt]) begin */
+    /*         if (cntxt == null) begin */
+    /*             $display("Null context in database"); */
+    /*             $fatal(1); */
+    /*         end else begin */
+    /*             $display("context index=%0d, name = %s, full_name = %s", */
+                    /* index, cntxt.get_name(), cntxt.get_full_hierarchical_name()); */
+                /* index++; */
+            /* end */
+        /* end */
 
-        if (cntxt != null) begin
-
-            // Models how `uvm_config_db` does key formation
-            if (inst_name == "") begin
-                full_key = {cntxt.get_full_hierarchical_name(), ".", field_name};
-            end else if (field_name != "") begin
-                full_key = {cntxt.get_full_hierarchical_name(), ".", inst_name, ".", field_name};
-            end
-
-            if (config_db_mgr::m_rsc.exists(cntxt) && config_db_mgr::m_rsc[cntxt].exists(full_key)) begin
-                store = config_db_mgr::m_rsc[cntxt];
-                store[full_key].get(cb);
-                $cast(unwrapped_value, cb);
-                value = unwrapped_value.obj;
-                $display("DEBUG: Found key '%s' in context '%s'", full_key, cntxt.get_full_hierarchical_name());
-                return 1;
-            end else begin
-                $display("DEBUG: Context '%s' not found in m_rsc, checking parent...", cntxt.get_full_hierarchical_name());
-                found = get(cntxt.get_parent(), inst_name, field_name, value);
-                if (found == 1) begin
-                    return 1;
-                end
-            end
-        end else begin
-            full_key = {inst_name, ".", field_name};
-            if (config_db_mgr::global_rsc.exists(full_key)) begin
-                config_db_mgr::global_rsc[full_key].get(cb);
-                $cast(unwrapped_value, cb);
-                value = unwrapped_value.obj;
-                $display("DEBUG: Found key '%s' in global store", full_key);
-                return 1;
-            end else begin
-                $display("No match for field %s in global scope", field_name);
-                return 0;
-            end
-        end
-
-//        if (!m_rsc.exists(cntxt)) begin
-//            $display("DEBUG: Context '%s' not found in m_rsc, checking parent...", cntxt.get_full_hierarchical_name());
-//            return get(cntxt.get_parent(), inst_name, field_name, value);
-//        end
-//
-//        // If key exists in the current components config store, unwrap the proxy into the
-//        // appropriate container and then return 1
-//        if (m_rsc[cntxt].exists(full_key)) begin
-//            $display("DEBUG: Found key '%s' in context '%s'", full_key, cntxt.get_full_hierarchical_name());
-//            store = m_rsc[cntxt];
-//            store[full_key].get(cb);
-//        
-//            $cast(unwrapped_value, cb);
-//            value = unwrapped_value.obj; 
-//            return 1;
-//        end
-//
-//        // Recursively call until we find the matching context or hit the top
-
-    endfunction: get
-*/
-    static function void dump_local();
-
-        int index = 0;
-        $display("Dumping local database");
-        $display("Total components: %0d", config_db_mgr::m_rsc.num());
-        if (config_db_mgr::m_rsc.num() == 0) begin
-            $display("Database empty!!!!");
-            return;
-        end
-
-        foreach(config_db_mgr::m_rsc[cntxt]) begin
-            if (cntxt == null) begin
-                $display("Null context in database");
-                $fatal(1);
-            end else begin
-                $display("context index=%0d, name = %s, full_name = %s",
-                    index, cntxt.get_name(), cntxt.get_full_hierarchical_name());
-                index++;
-            end
-        end
-
-    endfunction: dump_local
+    /* endfunction: dump_local */
 
 endclass: config_db
 
