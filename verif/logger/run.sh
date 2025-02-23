@@ -1,4 +1,4 @@
 #!/bin/bash
 
-vsim -c -classdebug -do 'run -all; exit' work.top
+vsim -c -classdebug -do 'run -all; exit' work.tb
 
