@@ -1,70 +1,126 @@
-// Define log levels used by testbench components
-typedef enum {
-    LOG_FATAL,  // Critical issues that halt simulation
-    LOG_ERROR,  // Errors requiring attention
-    LOG_WARN,   // Alerts about potential issues
-    LOG_INFO,   // General operational messages
-    LOG_DEBUG   // Detailed debugging information
-} log_level_t;
-
-// Default log level for new testbench components (can be overriden locally)
-log_level_t default_log_level = LOG_INFO;
-
-// Static class used for all logging activities
 class logger;
 
-    static string name = "logger";
+    static logger single_instance;
+    static bit initialized = 0;
 
-    static function void init();
-        // TODO These should be numbers, not strings
-        string runtime_level_str;
-        log_level_t runtime_log_level;
+    static log_level_t default_log_level = LOG_MEDIUM;
 
-        // Get the runtime log level from outside the test case
-        if ($value$plusargs("LOG_LEVEL=%s", runtime_level_str)) begin
-            case (runtime_level_str)
-                "FATAL": begin runtime_log_level = LOG_FATAL;  end
-                "ERROR": begin runtime_log_level = LOG_ERROR;  end
-                "WARN":  begin runtime_log_level = LOG_WARN;   end
-                "INFO":  begin runtime_log_level = LOG_INFO;   end
-                "DEBUG": begin runtime_log_level = LOG_DEBUG;  end
-                default: begin
-                    // Exit out if an invalid log level was provided - sims might take a long time
-                    log(LOG_FATAL, name, $sformatf("Unknown logging level provided: %s", runtime_level_str), "");
-                end
+    static const string log_severity_map [log_severity_t] = '{
+        LOG_INFO        : "INFO",
+        LOG_WARN        : "WARNING",
+        LOG_ERROR       : "ERROR",
+        LOG_FATAL       : "FATAL" 
+    };
+
+    function new();
+    endfunction: new
+
+    static function logger get_instance();
+        if (single_instance == null) begin
+            single_instance = new();
+            // Ensures that initialization happens only once
+            initialize();
+        end
+        return single_instance;
+    endfunction: get_instance
+
+    // This should be called early on in the testbench so that any logger plusargs can be applied
+    static function void initialize();
+        string verbosity;
+
+        string msg_fmt;
+        string log_msg;
+
+        if (initialized) begin
+            return;
+        end
+
+        if ($value$plusargs("LOG_VERBOSITY=%s", verbosity)) begin
+            case (verbosity)
+                "NONE":     default_log_level = LOG_NONE;
+                "LOW":      default_log_level = LOG_LOW;
+                "MEDIUM":   default_log_level = LOG_MEDIUM;
+                "HIGH":     default_log_level = LOG_HIGH;
+                default:    default_log_level = LOG_MEDIUM;
             endcase
         end
+        msg_fmt = "%s @ %0t: %s";
+        $display(msg_fmt, log_severity_map[LOG_INFO], $time, "Initializing logger");
+        $fflush();
 
-        // Set the logging level for all components
-        logger::set_default_log_level(runtime_log_level);
+        // Prevents initialiation from running more than once
+        initialized = 1;
 
-    endfunction: init
+    endfunction: initialize
 
-    static function void set_default_log_level(log_level_t level);
-        default_log_level = level;
-    endfunction: set_default_log_level
+    // Calls to the logging method need to include an object reference, the severity, the message,
+    // and the verbosity level of the message.  The logger::log() will use the the object_base::
+    // get_log_level() method to determine whether to actually log the message.  If the object
+    // reference is null, then the default log level will be used.
+    function void log(log_severity_t severity, log_level_t verbosity, string msg, object_base obj, string filename, int line_number);
 
-    static function log_level_t get_default_log_level();
-        return default_log_level;
-    endfunction: get_default_log_level
-
-    static function void log(log_level_t level, string component_name, string msg, string id);
-        string level_name;
         string msg_fmt;
+        string log_msg;
+        automatic string file_line_info;
 
-        // UVM like log messages, with optional ID field
-        if (id == "") begin
-            msg_fmt = "%s @ %0t: (%s) %s";
-        end else begin
-            msg_fmt = "%s @ %0t: (%s) [%s] %s";
+        // Null objects cannot participate in logging
+        if (obj == null) begin
+            msg_fmt = "%s @ %0t: %s";
+            $display(msg_fmt, log_severity_map[LOG_FATAL], $time, "Null object passed to logger::log()");
+            $fatal(1);
         end
-        // Extract the log level name and format the output
-        level_name = level.name();
-        $display(msg_fmt,
-            level_name.substr(4, level_name.len()-1),  // Strip "LOG_" prefix
-            $time, component_name, id, msg);
-            $fflush;
+
+        // Always log warning or above and log info when the log message verbosity is at or below the
+        // threshold set for the caller
+        if (severity >= LOG_WARN || (verbosity <= obj.get_log_level() && verbosity != LOG_NONE)) begin
+            file_line_info = "";
+            if (severity == LOG_ERROR || severity == LOG_FATAL) begin
+                // Note the last space in the string
+                file_line_info = $sformatf("%s(%0d) ", filename, line_number);
+            end
+            msg_fmt = "%s %s@ %0t: %s [%s] %s";
+            log_msg = $sformatf(msg_fmt, log_severity_map[severity], file_line_info, $time,
+                                    obj.get_name(), obj.get_full_name(), msg);
+            $display(log_msg);
+        end
 
     endfunction: log
 
+    // Returns the default log level used for all new objects
+    function log_level_t get_default_log_level();
+        return this.default_log_level;
+    endfunction
+
 endclass: logger
+
+// --- {{{
+
+class object_base;
+
+    string name = name;
+    log_level_t current_log_level;
+
+    function new(string name);
+        this.name  = name;
+        this.current_log_level = logger::get_instance().get_default_log_level();
+    endfunction
+
+    function string get_name();
+        return this.name;
+    endfunction
+
+    function string get_full_name();
+        return this.name;
+    endfunction
+
+    function log_level_t get_log_level();
+        return this.current_log_level;
+    endfunction
+
+    function void set_log_level(log_level_t level);
+        this.current_log_level = level;
+        return;
+    endfunction
+
+endclass: object_base
+
