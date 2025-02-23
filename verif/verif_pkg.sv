@@ -1,18 +1,36 @@
 package verif_pkg;
 
+`include "logger_macros.svh"
+
     // Forward declarations --- {{{
 
     // Sequence objects store references to sequencers and sequencers store queues of sequence
     // objects
     typedef class sequence_base;
-    // typedef class sequencer_base;
 
-    // THe configuration database needs to be aware of these types of objects
+    // The configuration database and logger need to be aware of these types of objects
     typedef class component_base;
     typedef class object_base;
+
+    // Indicate log verbosity
+    typedef enum {
+        LOG_NONE,
+        LOG_LOW,
+        LOG_MEDIUM,
+        LOG_HIGH,
+        LOG_DEBUG
+    } log_level_t;
+
+    // Indicate log severity
+    typedef enum {
+        LOG_INFO,
+        LOG_WARN,
+        LOG_ERROR,
+        LOG_FATAL 
+    } log_severity_t;
+
     // }}}
 
-    // Static classes, typedefs, global values, macros
 `include "logger.sv"
 `include "config_db.sv"
 

@@ -93,34 +93,3 @@ class logger;
 
 endclass: logger
 
-// --- {{{
-
-class object_base;
-
-    string name = name;
-    log_level_t current_log_level;
-
-    function new(string name);
-        this.name  = name;
-        this.current_log_level = logger::get_instance().get_default_log_level();
-    endfunction
-
-    function string get_name();
-        return this.name;
-    endfunction
-
-    function string get_full_name();
-        return this.name;
-    endfunction
-
-    function log_level_t get_log_level();
-        return this.current_log_level;
-    endfunction
-
-    function void set_log_level(log_level_t level);
-        this.current_log_level = level;
-        return;
-    endfunction
-
-endclass: object_base
-
