@@ -24,7 +24,6 @@ virtual class component_base extends object_base;
         if (parent != null) begin
             parent.add_child(this);
         end
-        this.current_log_level = default_log_level;
         this.current_phase = UNINITIALIZED;
     endfunction: new
 
@@ -32,9 +31,9 @@ virtual class component_base extends object_base;
     function void add_child(component_base child);
         if (this.children.exists(child.name)) begin
             // If the child exists in the hierarchy then something has gone very wrong
-            log_fatal($sformatf("Child '%s' was already found in hierarchy", child.get_name()));
+            `log_fatal($sformatf("Child '%s' was already found in hierarchy", child.get_name()));
         end else begin
-            this.children[child.get_full_hierarchical_name()] = child;
+            this.children[child.get_full_name()] = child;
         end
     endfunction: add_child
 
@@ -46,21 +45,21 @@ virtual class component_base extends object_base;
         component_base child;
 
         // Print current component
-        $display("full name = %s", root.get_full_hierarchical_name());
+        $display("full name = %s", root.get_full_name());
 
         foreach (root.children[child_name]) begin
-            $display("child_naem = %s", child_name);
+            $display("child name = %s", child_name);
         end
 
     endfunction: print_hierarchy
 
     // Overriding base class function because we actually have hierarchy (base class is flat)
-    function string get_full_hierarchical_name();
+    function string get_full_name();
         if (this.parent != null) begin
-            return {this.parent.get_full_hierarchical_name(), ".", this.get_name()};
+            return {this.parent.get_full_name(), ".", this.get_name()};
         end
         return this.get_name();
-    endfunction: get_full_hierarchical_name
+    endfunction: get_full_name
 
     // }}}
 
@@ -77,22 +76,26 @@ virtual class component_base extends object_base;
     function void log_phase_entry();
         string msg;
         msg = $sformatf("Entering phase %s", this.current_phase.name());
-        logger::log(LOG_INFO, this.get_full_hierarchical_name(), msg, "");
-        $fflush();
+        `log_info(msg, LOG_MEDIUM);
     endfunction: log_phase_entry
 
     function void log_phase_exit();
         string msg;
         msg = $sformatf("Leaving phase %s", this.current_phase.name());
-        logger::log(LOG_INFO, this.get_full_hierarchical_name(), msg, "");
-        $fflush();
+        `log_info(msg, LOG_MEDIUM);
     endfunction: log_phase_exit
 
+    // Sets the default log level for the component by querying the logger. Does not effect any of
+    // its children. Should be called from build_phase();
+    function void set_default_log_level();
+        this.current_log_level = `get_default_log_level;
+    endfunction: set_default_log_level
     // }}}
 
     // Lifecycle methods --- {{{
 
     virtual function void build_phase();
+        this.set_default_log_level();
         this.current_phase = BUILD;
         log_phase_entry();
 

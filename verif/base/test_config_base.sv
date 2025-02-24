@@ -11,16 +11,16 @@ virtual class test_config_base extends object_base;
 
     virtual function void set_memory_file(string model_name, string filename);
         if (model_name == "" || filename == "") begin
-            log_fatal("Memory model or filenames cannot be empty");
+            `log_fatal("Memory model or filenames cannot be empty");
         end
 
         if (this.memory_files.exists(model_name)) begin
-            log_info($sformatf("Overriding memory model filename: %s -> %s",
-                this.memory_files[model_name], filename));
+            `log_info($sformatf("Overriding memory model filename: %s -> %s",
+                this.memory_files[model_name], filename), LOG_MEDIUM);
         end else begin
             this.memory_files[model_name] = filename;
-            log_info($sformatf("Set filename for memory model %s to %s",
-                model_name, this.memory_files[model_name]));
+            `log_info($sformatf("Set filename for memory model %s to %s",
+                model_name, this.memory_files[model_name]), LOG_MEDIUM);
         end
 
     endfunction: set_memory_file
@@ -30,7 +30,7 @@ virtual class test_config_base extends object_base;
         if (this.memory_files.exists(model_name)) begin
             return this.memory_files[model_name];
         end else begin
-            log_error($sformatf("No memory file set in configuration for memory model %s", model_name));
+            `log_error($sformatf("No memory file set in configuration for memory model %s", model_name));
             return "";
         end
 

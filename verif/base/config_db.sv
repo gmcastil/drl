@@ -65,9 +65,9 @@ class config_db_mgr;
             // otherwise we extend it
             if (!this.scoped_rsc.exists(cntxt)) begin
                 this.scoped_rsc[cntxt] = {};
-                $display("CONFIG_DB_MGR: Initializing entry for component %s", cntxt.get_full_hierarchical_name());
+                $display("CONFIG_DB_MGR: Initializing entry for component %s", cntxt.get_full_name());
             end else begin
-                $display("CONFIG_DB_MGR: Extending existing entry for component %s", cntxt.get_full_hierarchical_name());
+                $display("CONFIG_DB_MGR: Extending existing entry for component %s", cntxt.get_full_name());
             end
 
             // Track unique callers only - most callers will have many keys
@@ -75,7 +75,7 @@ class config_db_mgr;
                 this.scoped_key_queue[cntxt].push_back(full_key);
             end
             this.scoped_rsc[cntxt][full_key] = value;
-            $display("CONFIG_DB_MGR: Local set [%s] in %s", full_key, cntxt.get_full_hierarchical_name());
+            $display("CONFIG_DB_MGR: Local set [%s] in %s", full_key, cntxt.get_full_name());
         end
     
     endfunction: set
@@ -85,12 +85,12 @@ class config_db_mgr;
         string full_key = config_db_build_key(cntxt, inst_name, field_name);
 
         $display("CONFIG_DB_MGR: Lookup requested for [%s] in %s",
-            full_key, (cntxt != null) ? cntxt.get_full_hierarchical_name() : "GLOBAL");
+            full_key, (cntxt != null) ? cntxt.get_full_name() : "GLOBAL");
 
         // Local lookup
         if (cntxt != null && this.scoped_rsc.exists(cntxt) && this.scoped_rsc[cntxt].exists(full_key)) begin
             value = this.scoped_rsc[cntxt][full_key];
-            $display("CONFIG_DB_MGR: Found [%s] in local %s", full_key, cntxt.get_full_hierarchical_name());
+            $display("CONFIG_DB_MGR: Found [%s] in local %s", full_key, cntxt.get_full_name());
             return 1;
         end
 
@@ -104,7 +104,7 @@ class config_db_mgr;
         // Recursive lookup through parents
         if (cntxt != null) begin
             $display("CONFIG_DB_MGR: [%s] not found in %s, checking parent...", 
-                        full_key, cntxt.get_full_hierarchical_name());
+                        full_key, cntxt.get_full_name());
             return get(cntxt.get_parent(), inst_name, field_name, value);
         end
 
@@ -134,7 +134,7 @@ class config_db_mgr;
 
         $display("INFO: Scoped config_db Dump");
         foreach (scoped_rsc[comp]) begin
-            $display("  %s (%s)", comp.get_name(), comp.get_full_hierarchical_name());
+            $display("  %s (%s)", comp.get_name(), comp.get_full_name());
             keys = scoped_key_queue[comp];
             for (int i = 0; i < keys.size(); i++) begin
                 $display("    %s", keys[i]);
@@ -179,7 +179,7 @@ function string config_db_build_key(component_base cntxt, string inst_name, stri
     if (field_name == "") begin
         $display("No key for you");
         msg = $sformatf("CONFIG_DB_MGR ERROR: Field name is empty! Context: %s, inst_name: %s",
-                        (cntxt != null) ? cntxt.get_full_hierarchical_name() : "GLOBAL",
+                        (cntxt != null) ? cntxt.get_full_name() : "GLOBAL",
                         (inst_name != "") ? inst_name : "<empty>");
         $stacktrace;
         $fatal(1, msg);
@@ -188,9 +188,9 @@ function string config_db_build_key(component_base cntxt, string inst_name, stri
     if (cntxt == null) begin
         full_key = inst_name;
     end else if (inst_name == "") begin
-        full_key = cntxt.get_full_hierarchical_name();
+        full_key = cntxt.get_full_name();
     end else begin
-        full_key = {cntxt.get_full_hierarchical_name(), ".", inst_name};
+        full_key = {cntxt.get_full_name(), ".", inst_name};
     end
 
     // Before appending the field name, make sure its not the empty string (e.g., global

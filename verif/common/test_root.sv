@@ -1,55 +1,44 @@
-// The logger singleton class requires callers of this type, so we need a proxy object to enable
-// logging for components outside the test hierarchy.
-class logger_proxy extends object_base;
+class test_root extends object_base;
 
-    function new(string name);
+    static test_root single_instance;
+    test_case_base current_test;
+
+    function new(string name = "test_root");
         super.new(name);
     endfunction: new
 
-endclass: logger_proxy
-
-class test_root;
-
-    static test_root single_instance;
-    test_case_base test_case;
-    logger_proxy log_proxy;
-
-    function static test_root get_instance();
+    static function test_root get_instance();
         if (single_instance == null) begin
             single_instance = new();
-            initialize();
         end
         return single_instance;
     endfunction
 
-    static function void initialize();
-        log_proxy = new("log_proxy");
-    end
+    task run_test();
 
-    function void log(string msg);
-        logger::get_instance().log(
+        string test_name;
 
-    endfunction
-
-    function void run_test(string test_name);
-        log.print($sformatf("Instantiating test: %s", test_name));
-        current_test = 
-            if (current_test == null) begin
-                log.print($sformatf("ERROR: Test %s not found!", test_name));
-                return;
+        // Get the provided test name from the test factory
+        if (!$value$plusargs("TEST_NAME=%s", test_name)) begin
+            $display("No test name provided");
+            $fatal(1);
         end
+        // TODO This is returning an instantiated test case but it wasn't actually created in the
+        // factory. Implement an actual factory in the future that only creates tests on demand
+        // instead of requiring someone else (e.g., the tb_top) to create and register all of the
+        // test cases up front.
+        current_test = test_factory::get_instance().create_test(test_name);
+        if (current_test == null) begin
+            $display("Test %s not registered in the factory", test_name);
+            $fatal(1);
+        end
+        // Register the test case globally
+        config_db#(test_case_base)::set(null, "", "test_case", current_test);
 
-        // FIXME: Hacks since we dont have a test factory in the framework yet!
-        encoder_test_factory::init("test_factory");
-        test_case = encoder_test_factory::create_test(test_name);
+        // Now we're in a position to actually start the lifecycle of the test case
+        current_test.run_lifecycle();
 
-        // Register the test case 
-        config_db::set(this, "", "test_case", test_case);
-
-        // Run the test
-        test_case.run_lifecycle();
-
-    endfunction
+    endtask: run_test
 
 endclass
 

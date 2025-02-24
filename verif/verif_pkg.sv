@@ -47,5 +47,7 @@ package verif_pkg;
 `include "env_base.sv"
 `include "test_config_base.sv"
 `include "test_case_base.sv"
+`include "test_factory.sv"
+`include "test_root.sv"
 
 endpackage: verif_pkg

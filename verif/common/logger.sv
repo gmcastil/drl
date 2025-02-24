@@ -1,4 +1,4 @@
-class logger;
+class logger extends object_base;
 
     static logger single_instance;
     static bit initialized = 0;
@@ -12,7 +12,8 @@ class logger;
         LOG_FATAL       : "FATAL" 
     };
 
-    function new();
+    function new(string name = "logger");
+        super.new(name);
     endfunction: new
 
     static function logger get_instance();
@@ -24,7 +25,6 @@ class logger;
         return single_instance;
     endfunction: get_instance
 
-    // This should be called early on in the testbench so that any logger plusargs can be applied
     static function void initialize();
         string verbosity;
 

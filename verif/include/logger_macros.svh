@@ -36,10 +36,13 @@
     if (cntxt.get_log_level() >= verbosity) logger::get_instance().log(LOG_INFO, verbosity, msg, cntxt, `__FILE__, `__LINE__)
 
 `define log_debug(msg) \
-    if (this.get_log_level() >= LOG_DEBUG) logger::get_instance().log(LOG_INFO, LOG_DEBUG, msg, cntxt, `__FILE__, `__LINE__)
+    if (this.get_log_level() >= LOG_DEBUG) logger::get_instance().log(LOG_INFO, LOG_DEBUG, msg, this, `__FILE__, `__LINE__)
 
 `define log_debug_with_context(cntxt, msg) \
-    if (this.get_log_level() >= LOG_DEBUG) logger::get_instance().log(LOG_INFO, LOG_DEBUG, msg, this, `__FILE__, `__LINE__)
+    if (this.get_log_level() >= LOG_DEBUG) logger::get_instance().log(LOG_INFO, LOG_DEBUG, msg, cntxt, `__FILE__, `__LINE__)
+
+`define get_default_log_level \
+    logger::get_instance().get_default_log_level()
 
 `endif
 

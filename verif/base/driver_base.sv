@@ -8,7 +8,7 @@ virtual class driver_base extends component_base;
     // transaction counting, tracking and timestamping
     task process_transaction(transaction_base txn);
         if (txn == null) begin
-            log_fatal("Cannot process null transaction");
+            `log_fatal("Cannot process null transaction");
         end
     endtask: process_transaction
 
