@@ -1,7 +1,17 @@
-class logger extends object_base;
+// X Report mechanism for static classes to use
+// Create report macros for static classes and put them in the globasl
+// Refactor logger to use report machinery
+// Factories use report system
+// Fix all the stuff that i was trying to shoehorn into object_base
+// For static callers, use the report system, creaet a registration system, and then compare against
+// the stored value and if not found, just compare against the static log level=
+// Get it all to build 
+class logger;
 
     static logger single_instance;
-    static bit initialized = 0;
+    bit initialized = 0;
+
+    string name;
 
     static log_level_t default_log_level = LOG_MEDIUM;
 
@@ -12,29 +22,32 @@ class logger extends object_base;
         LOG_FATAL       : "FATAL" 
     };
 
-    function new(string name = "logger");
-        super.new(name);
+    function new();
     endfunction: new
 
     static function logger get_instance();
         if (single_instance == null) begin
             single_instance = new();
             // Ensures that initialization happens only once
-            initialize();
+            single_instance.initialize();
         end
         return single_instance;
     endfunction: get_instance
 
-    static function void initialize();
+    function void initialize();
         string verbosity;
 
         string msg_fmt;
         string log_msg;
 
-        if (initialized) begin
+        if (this.initialized) begin
             return;
         end
 
+        // Since the logger is outside the
+        this.name = "logger";
+
+        // Set the default logging level based on plusargs
         if ($value$plusargs("LOG_VERBOSITY=%s", verbosity)) begin
             case (verbosity)
                 "NONE":     default_log_level = LOG_NONE;
@@ -44,12 +57,12 @@ class logger extends object_base;
                 default:    default_log_level = LOG_MEDIUM;
             endcase
         end
-        msg_fmt = "%s @ %0t: %s";
-        $display(msg_fmt, log_severity_map[LOG_INFO], $time, "Initializing logger");
         $fflush();
 
         // Prevents initialiation from running more than once
-        initialized = 1;
+        this.initialized = 1;
+        // Now we can call the reporting machinery
+        `report_info(this.name, "Logger initialized", LOG_NONE);
 
     endfunction: initialize
 
@@ -61,11 +74,13 @@ class logger extends object_base;
 
         string msg_fmt;
         string log_msg;
-        automatic string file_line_info;
+        string file_line_info;
 
         // Null objects cannot participate in logging
         if (obj == null) begin
             msg_fmt = "%s @ %0t: %s";
+
+            $display("Report message here about null objects");
             $display(msg_fmt, log_severity_map[LOG_FATAL], $time, "Null object passed to logger::log()");
             $fatal(1);
         end
@@ -85,6 +100,28 @@ class logger extends object_base;
         end
 
     endfunction: log
+
+    function void report(log_severity_t severity, log_level_t verbosity, string msg, string name, string filename, int line_number);
+
+        string msg_fmt;
+        string report_msg;
+        string file_line_info;
+
+        if (name == "") begin
+            $display("Report with message about empty strings");
+            return;
+        end
+
+        if (severity >= LOG_WARN || (verbosity <= default_log_level && verbosity != LOG_NONE)) begin
+            if (severity == LOG_ERROR || severity == LOG_FATAL) begin
+                file_line_info = $sformatf("%s(%0d) ", filename, line_number);
+            end
+            msg_fmt = "%s %s@ %0t: %s [%s] %s";
+            report_msg = $sformatf(msg_fmt, log_severity_map[severity], file_line_info, $time,
+                                    name, "global", msg);
+            $display(report_msg);
+        end
+    endfunction: report
 
     // Returns the default log level used for all new objects
     function log_level_t get_default_log_level();

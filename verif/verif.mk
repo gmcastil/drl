@@ -12,8 +12,6 @@ verif:
 	fi
 	$(VLOG) -work $(WORK) \
 		$(VLOG_FLAGS) \
-		+incdir+$(VERIF_ROOT)/include \
-		+incdir+$(VERIF_ROOT)/common \
-		+incdir+$(VERIF_ROOT)/base \
+		+incdir+$(VERIF_ROOT) \
 		$(VERIF_ROOT)/verif_pkg.sv
 

@@ -24,7 +24,7 @@ class test_factory extends object_base;
     endfunction: create_test
 
     function void register(string test_name, test_case_base test_case);
-        test_case_handles[test_name] = test_case;
+        singleton_instance.test_case_handles[test_name] = test_case;
         $display("Registered %s with the test factory", test_case.get_name());
     endfunction: register
 

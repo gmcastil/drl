@@ -1,5 +1,5 @@
-`ifndef LOGGER_MACROS_SVH
-`define LOGGER_MACROS_SVH
+`ifndef VERIF_GLOBALS_SVH
+`define VERIF_GLOBALS_SVH
 
 `define log_fatal(msg) \
     logger::get_instance().log(LOG_FATAL, LOG_NONE, msg, this, `__FILE__, `__LINE__); \
@@ -43,6 +43,10 @@
 
 `define get_default_log_level \
     logger::get_instance().get_default_log_level()
+
+`define report_info(name, msg, verbosity) \
+    if (verbosity >= logger::get_instance().get_default_log_level()) \
+        logger::get_instance().report(LOG_INFO, verbosity, msg, name, `__FILE__, `__LINE__)
 
 `endif
 
