@@ -13,7 +13,7 @@ class logger;
 
     string name;
 
-    static log_level_t default_log_level = LOG_MEDIUM;
+    log_level_t default_log_level = LOG_MEDIUM;
 
     static const string log_severity_map [log_severity_t] = '{
         LOG_INFO        : "INFO",
@@ -37,32 +37,35 @@ class logger;
     function void initialize();
         string verbosity;
 
-        string msg_fmt;
         string log_msg;
 
         if (this.initialized) begin
             return;
         end
 
-        // Since the logger is outside the
+        // The logger singleton needs a name
         this.name = "logger";
 
         // Set the default logging level based on plusargs
         if ($value$plusargs("LOG_VERBOSITY=%s", verbosity)) begin
             case (verbosity)
-                "NONE":     default_log_level = LOG_NONE;
-                "LOW":      default_log_level = LOG_LOW;
-                "MEDIUM":   default_log_level = LOG_MEDIUM;
-                "HIGH":     default_log_level = LOG_HIGH;
-                default:    default_log_level = LOG_MEDIUM;
+                "NONE":     this.default_log_level = LOG_NONE;
+                "LOW":      this.default_log_level = LOG_LOW;
+                "MEDIUM":   this.default_log_level = LOG_MEDIUM;
+                "HIGH":     this.default_log_level = LOG_HIGH;
+                "DEBUG":    this.default_log_level = LOG_DEBUG;
+                default:    this.default_log_level = LOG_DEBUG;
             endcase
         end
         $fflush();
 
         // Prevents initialiation from running more than once
         this.initialized = 1;
-        // Now we can call the reporting machinery
-        `report_info(this.name, "Logger initialized", LOG_NONE);
+
+        // Now static objects (like ourselves can actually start using the logger
+        log_msg = $sformatf("Logger initialized with default log level %s",
+                                this.get_default_log_level());
+        `report_info(this.name, log_msg, LOG_LOW);
 
     endfunction: initialize
 
@@ -78,16 +81,13 @@ class logger;
 
         // Null objects cannot participate in logging
         if (obj == null) begin
-            msg_fmt = "%s @ %0t: %s";
-
-            $display("Report message here about null objects");
-            $display(msg_fmt, log_severity_map[LOG_FATAL], $time, "Null object passed to logger::log()");
-            $fatal(1);
+			`report_fatal(this.name, "Null object passed to the logger");
         end
 
-        // Always log warning or above and log info when the log message verbosity is at or below the
-        // threshold set for the caller
-        if (severity >= LOG_WARN || (verbosity <= obj.get_log_level() && verbosity != LOG_NONE)) begin
+		// We only look at verbosity for info and debug severity and if the current log level is set to LOG_NONE
+		// then we treat it like a suppression statement.
+        if (severity >= LOG_WARN ||
+				(verbosity <= obj.get_log_level() && obj.get_log_level() != LOG_NONE)) begin
             file_line_info = "";
             if (severity == LOG_ERROR || severity == LOG_FATAL) begin
                 // Note the last space in the string
@@ -96,6 +96,7 @@ class logger;
             msg_fmt = "%s %s@ %0t: %s [%s] %s";
             log_msg = $sformatf(msg_fmt, log_severity_map[severity], file_line_info, $time,
                                     obj.get_name(), obj.get_full_name(), msg);
+			// Actual log message that gets generated to the console
             $display(log_msg);
         end
 
@@ -107,18 +108,25 @@ class logger;
         string report_msg;
         string file_line_info;
 
+		// Empty names are not expected to be a thing
         if (name == "") begin
-            $display("Report with message about empty strings");
+			`report_error(this.name, "Attempt to pass empty static name to logger");
             return;
         end
 
-        if (severity >= LOG_WARN || (verbosity <= default_log_level && verbosity != LOG_NONE)) begin
+		// We only look at verbosity for info and debug severity and if the current log level is set to LOG_NONE
+		// then we treat it like a suppression statement.
+        if (severity >= LOG_WARN ||
+				(verbosity <= this.get_default_log_level() && this.get_default_log_level() != LOG_NONE)) begin
+			file_line_info = "";
             if (severity == LOG_ERROR || severity == LOG_FATAL) begin
+                // Note the last space in the string
                 file_line_info = $sformatf("%s(%0d) ", filename, line_number);
             end
             msg_fmt = "%s %s@ %0t: %s [%s] %s";
             report_msg = $sformatf(msg_fmt, log_severity_map[severity], file_line_info, $time,
                                     name, "global", msg);
+			// Actual report message that gets sent to the console
             $display(report_msg);
         end
     endfunction: report

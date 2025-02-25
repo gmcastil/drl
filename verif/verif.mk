@@ -12,6 +12,7 @@ verif:
 	fi
 	$(VLOG) -work $(WORK) \
 		$(VLOG_FLAGS) \
+		-E output \
 		+incdir+$(VERIF_ROOT) \
 		$(VERIF_ROOT)/verif_pkg.sv
 
