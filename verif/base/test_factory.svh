@@ -1,6 +1,8 @@
-class test_factory extends object_base;
+class test_factory;
 
     static test_factory singleton_instance;
+    string name;
+
     // In the UVM world, they have an entire complicated machine involving copying, and cloning, and
     // dynamically creating tests at runtime rather than all up front at once.  Since we don't need
     // or want zillions of test cases, a simple storage mechanism is sufficient.  In UVM, this would
@@ -8,13 +10,13 @@ class test_factory extends object_base;
     // that here, a more approprpiate name for the container is used.
     static test_case_base test_case_handles [string];
 
-    function new(string name = "test_factory");
-        super.new(name);
+    function new(string name);
+        this.name = name; 
     endfunction: new
 
     static function test_factory get_instance();
         if (singleton_instance == null) begin
-            singleton_instance = new();
+            singleton_instance = new("test_factory");
         end
         return singleton_instance;
     endfunction: get_instance
@@ -25,7 +27,11 @@ class test_factory extends object_base;
 
     function void register(string test_name, test_case_base test_case);
         singleton_instance.test_case_handles[test_name] = test_case;
-        $display("Registered %s with the test factory", test_case.get_name());
+        `report_info(this.get_name(), $sformatf("Registered test name '%s' with the test factory", test_case.get_name()), LOG_LOW);
     endfunction: register
+
+    function string get_name();
+        return this.name;
+    endfunction: get_name
 
 endclass: test_factory
