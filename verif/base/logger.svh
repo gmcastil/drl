@@ -54,15 +54,14 @@ class logger;
                 "MEDIUM":   this.default_log_level = LOG_MEDIUM;
                 "HIGH":     this.default_log_level = LOG_HIGH;
                 "DEBUG":    this.default_log_level = LOG_DEBUG;
-                default:    this.default_log_level = LOG_DEBUG;
+                default:    this.default_log_level = LOG_MEDIUM;
             endcase
         end
-        $fflush();
 
         // Prevents initialiation from running more than once
         this.initialized = 1;
 
-        // Now static objects (like ourselves can actually start using the logger
+        // Now static objects (like ourselves) can actually start using the logger
         log_msg = $sformatf("Logger initialized with default log level %s",
                                 this.get_default_log_level());
         `report_info(this.name, log_msg, LOG_LOW);
@@ -81,10 +80,20 @@ class logger;
 
         // Null objects cannot participate in logging
         if (obj == null) begin
-			`report_fatal(this.name, "Null object passed to the logger");
+            // Manually craft to preserve location and calling info then LOG_FATAL
+            msg_fmt = "%s %s(%0d)@ %0t: %s [%s] %s";
+            log_msg = $sformatf(msg_fmt, log_severity_map[severity], filename, line_number, 
+                                    $time, this.get_name(), "global",
+                                     "Null object passed to the logger");
+            $display(log_msg);
+`ifndef NO_STACKTRACE_SUPPORT
+            $stacktrace;
+`endif
+            $fflush();
+            $fatal(1);
         end
 
-		// We only look at verbosity for info and debug severity and if the current log level is set to LOG_NONE
+		// We only look at verbosity for info severity and if the current log level is set to LOG_NONE
 		// then we treat it like a suppression statement.
         if (severity >= LOG_WARN ||
 				(verbosity <= obj.get_log_level() && obj.get_log_level() != LOG_NONE)) begin
@@ -102,19 +111,23 @@ class logger;
 
     endfunction: log
 
-    function void report(log_severity_t severity, log_level_t verbosity, string msg, string name, string filename, int line_number);
+    function void report(log_severity_t severity, log_level_t verbosity, string msg, string obj_name, string filename, int line_number);
 
         string msg_fmt;
         string report_msg;
         string file_line_info;
 
 		// Empty names are not expected to be a thing
-        if (name == "") begin
-			`report_error(this.name, "Attempt to pass empty static name to logger");
-            return;
+        if (obj_name == "") begin
+            // Manually craft to preserve location and calling info then LOG_ERROR
+            msg_fmt = "%s %s(%0d)@ %0t: %s [%s] %s";
+            report_msg = $sformatf(msg_fmt, log_severity_map[LOG_ERROR], filename, line_number, 
+                                    $time, this.get_name(), "global",
+                                    "Attempt to pass empty static name to logger");
+            $display(report_msg);
         end
 
-		// We only look at verbosity for info and debug severity and if the current log level is set to LOG_NONE
+		// We only look at verbosity for info severity and if the current log level is set to LOG_NONE
 		// then we treat it like a suppression statement.
         if (severity >= LOG_WARN ||
 				(verbosity <= this.get_default_log_level() && this.get_default_log_level() != LOG_NONE)) begin
@@ -125,7 +138,7 @@ class logger;
             end
             msg_fmt = "%s %s@ %0t: %s [%s] %s";
             report_msg = $sformatf(msg_fmt, log_severity_map[severity], file_line_info, $time,
-                                    name, "global", msg);
+                                    obj_name, "global", msg);
 			// Actual report message that gets sent to the console
             $display(report_msg);
         end
@@ -135,6 +148,10 @@ class logger;
     function log_level_t get_default_log_level();
         return this.default_log_level;
     endfunction
+
+    function string get_name();
+        return this.name;
+    endfunction: get_name
 
 endclass: logger
 
