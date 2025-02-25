@@ -61,7 +61,7 @@
 //  Convenience macros for logging from static functions - for now, no verbosity tracking per static
 //  callers is performed.
 `define report_error(name, msg) \
-    logger::get_instance().report(LOG_WARN, LOG_NONE, msg, name, `__FILE__, `__LINE__)
+    logger::get_instance().report(LOG_ERROR, LOG_NONE, msg, name, `__FILE__, `__LINE__)
 
 `define report_warn(name, msg) \
     logger::get_instance().report(LOG_WARN, LOG_NONE, msg, name, `__FILE__, `__LINE__)
