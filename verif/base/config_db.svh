@@ -45,7 +45,7 @@ class config_db_mgr;
 
     protected function new(string name);
         this.name = name;
-        `report_info(this.name, "Configuration database created", LOG_LOW);
+        `report_info(this.get_name(), "Configuration database created", LOG_LOW);
     endfunction: new
     
     static function config_db_mgr get_instance();
@@ -70,7 +70,7 @@ class config_db_mgr;
             this.global_rsc[full_key] = value;
 
             msg = $sformatf("SET global [%s] => %p", full_key, value);
-            `report_debug(this.name, msg);
+            `report_debug(this.get_name(), msg);
 
         // Otherwise we set scopedkeys
         end else begin
@@ -83,7 +83,7 @@ class config_db_mgr;
             end else begin
                 msg = $sformatf("Extending existing entry for component %s", cntxt.get_full_name());
             end
-            `report_debug(this.name, msg);
+            `report_debug(this.get_name(), msg);
 
             // Track unique callers only - most callers will have many keys
             if (!this.scoped_rsc[cntxt].exists(full_key)) begin
@@ -92,7 +92,7 @@ class config_db_mgr;
             this.scoped_rsc[cntxt][full_key] = value;
 
             msg = $sformatf("SET scoped [%s] in %s", full_key, cntxt.get_full_name());
-            `report_debug(this.name, msg);
+            `report_debug(this.get_name(), msg);
         end
     
     endfunction: set
@@ -107,13 +107,13 @@ class config_db_mgr;
         end else begin
             msg = $sformatf("Lookup requested for [%s] in %s", full_key, cntxt.get_full_name());
         end
-        `report_debug(this.name, msg);
+        `report_debug(this.get_name(), msg);
 
         // Attempt a scoped lookup first
         if (cntxt != null && this.scoped_rsc.exists(cntxt) && this.scoped_rsc[cntxt].exists(full_key)) begin
             value = this.scoped_rsc[cntxt][full_key];
             msg = $sformatf("Found [%s] in local %s", full_key, cntxt.get_full_name());
-            `report_debug(this.name, msg);
+            `report_debug(this.get_name(), msg);
             return 1;
         end
 
@@ -121,7 +121,7 @@ class config_db_mgr;
         if (cntxt == null && this.global_rsc.exists(full_key)) begin
             value = this.global_rsc[full_key];
             msg = $sformatf("Found [%s] in global scope", full_key);
-            `report_debug(this.name, msg);
+            `report_debug(this.get_name(), msg);
             return 1;
         end
 
@@ -133,7 +133,7 @@ class config_db_mgr;
         end
 
         msg = $sformatf("Lookup failed for [%s]", full_key);
-        `report_fatal(this.name, msg);
+        `report_fatal(this.get_name(), msg);
         return 0;
 
     endfunction: get
@@ -171,6 +171,10 @@ class config_db_mgr;
                 $display("");
         end
     endfunction
+
+    function string get_name();
+        return this.name;
+    endfunction: get_name
 
 endclass: config_db_mgr
 
